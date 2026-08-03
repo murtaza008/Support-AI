@@ -1,0 +1,218 @@
+// SupportAI data model.
+// Ported from the Supabase/Postgres schema in `New folder/supabase/migrations/*.sql`,
+// adapted for Prisma + Neon Postgres + pgvector.
+
+generator client {
+  provider        = "prisma-client"
+  output          = "../lib/generated/prisma"
+  moduleFormat    = "cjs"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  extensions = [vector]
+}
+
+enum Role {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+enum WorkspacePlan {
+  STARTER
+  PRO
+  AGENCY
+}
+
+enum DocumentSourceType {
+  FILE
+  URL
+  TEXT
+}
+
+enum DocumentStatus {
+  PENDING
+  PROCESSING
+  READY
+  ERROR
+}
+
+enum ConversationChannel {
+  PLAYGROUND
+  WIDGET
+  API
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  displayName  String?
+  avatarUrl    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  memberships       WorkspaceMember[]
+  createdWorkspaces Workspace[]       @relation("WorkspaceCreator")
+  createdAssistants Assistant[]       @relation("AssistantCreator")
+  createdDocuments  Document[]        @relation("DocumentCreator")
+  sentInvites       WorkspaceInvite[] @relation("InviteSender")
+}
+
+model Workspace {
+  id                   String        @id @default(uuid())
+  name                 String
+  slug                 String        @unique
+  plan                 WorkspacePlan @default(STARTER)
+  brandColor           String        @default("#FF5A36")
+  stripeCustomerId     String?       @unique
+  stripeSubscriptionId String?       @unique
+  createdById          String
+  createdBy            User          @relation("WorkspaceCreator", fields: [createdById], references: [id])
+  createdAt            DateTime      @default(now())
+
+  members       WorkspaceMember[]
+  assistants    Assistant[]
+  documents     Document[]
+  chunks        DocumentChunk[]
+  conversations Conversation[]
+  messages      Message[]
+  invites       WorkspaceInvite[]
+}
+
+model WorkspaceMember {
+  id          String    @id @default(uuid())
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role        Role      @default(MEMBER)
+  createdAt   DateTime  @default(now())
+
+  @@unique([workspaceId, userId])
+  @@index([userId])
+}
+
+model Assistant {
+  id           String    @id @default(uuid())
+  workspaceId  String
+  workspace    Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  name         String
+  description  String?
+  tone         String    @default("friendly")
+  systemPrompt String?
+  brandColor   String    @default("#FF5A36")
+  createdById  String
+  createdBy    User      @relation("AssistantCreator", fields: [createdById], references: [id])
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  documents     Document[]
+  chunks        DocumentChunk[]
+  conversations Conversation[]
+
+  @@index([workspaceId])
+}
+
+model Document {
+  id          String             @id @default(uuid())
+  workspaceId String
+  workspace   Workspace          @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  assistantId String?
+  assistant   Assistant?         @relation(fields: [assistantId], references: [id], onDelete: SetNull)
+  name        String
+  sourceType  DocumentSourceType @default(FILE)
+  sourceUrl   String?
+  status      DocumentStatus     @default(PENDING)
+  error       String?
+  sizeBytes   Int                @default(0)
+  charCount   Int                @default(0)
+  chunkCount  Int                @default(0)
+  createdById String
+  createdBy   User               @relation("DocumentCreator", fields: [createdById], references: [id])
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  chunks DocumentChunk[]
+
+  @@index([workspaceId, createdAt])
+  @@index([assistantId])
+}
+
+/// Chunks with embeddings. `embedding` is managed via raw SQL ($queryRaw/$executeRaw)
+/// since pgvector's `vector` type isn't a native Prisma scalar.
+model DocumentChunk {
+  id          String                      @id @default(uuid())
+  documentId  String
+  document    Document                    @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  workspaceId String
+  workspace   Workspace                   @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  assistantId String?
+  assistant   Assistant?                  @relation(fields: [assistantId], references: [id], onDelete: SetNull)
+  chunkIndex  Int
+  content     String
+  tokenCount  Int                         @default(0)
+  embedding   Unsupported("vector(768)")?
+  createdAt   DateTime                    @default(now())
+
+  @@index([documentId, chunkIndex])
+  @@index([workspaceId])
+}
+
+model Conversation {
+  id          String              @id @default(uuid())
+  workspaceId String
+  workspace   Workspace           @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  assistantId String
+  assistant   Assistant           @relation(fields: [assistantId], references: [id], onDelete: Cascade)
+  visitorId   String?
+  channel     ConversationChannel @default(PLAYGROUND)
+  resolved    Boolean             @default(false)
+  rating      Int?
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  messages Message[]
+
+  @@index([workspaceId, createdAt])
+  @@index([assistantId, createdAt])
+}
+
+model Message {
+  id             String       @id @default(uuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  workspaceId    String
+  workspace      Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  role           MessageRole
+  content        String
+  citations      Json?
+  createdAt      DateTime     @default(now())
+
+  @@index([conversationId, createdAt])
+}
+
+model WorkspaceInvite {
+  id          String    @id @default(uuid())
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  email       String
+  role        Role      @default(MEMBER)
+  token       String    @unique @default(cuid())
+  invitedById String
+  invitedBy   User      @relation("InviteSender", fields: [invitedById], references: [id])
+  acceptedAt  DateTime?
+  expiresAt   DateTime
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([workspaceId])
+}
