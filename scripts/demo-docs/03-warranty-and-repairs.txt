@@ -1,0 +1,13 @@
+Warranty and Repairs
+
+All Nimbus hardware comes with a 24-month limited warranty covering
+manufacturing defects.
+
+The warranty does not cover water damage, drops, or damage caused by
+unauthorised repairs.
+
+To start a warranty claim, email support@nimbusrobotics.com with your
+serial number and a photo of the issue. Approved repairs are completed
+within 10 business days.
+
+Out-of-warranty repairs are charged at $95 plus parts.

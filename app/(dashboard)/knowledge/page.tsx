@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useCurrentWorkspace } from "@/lib/hooks/use-current-workspace";
 import { Reveal } from "@/components/motion/Reveal";
+import { DocumentViewer } from "@/components/dashboard/DocumentViewer";
 
 type DocumentRow = {
   id: string;
@@ -31,6 +32,7 @@ type DocumentRow = {
 export default function KnowledgePage() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [viewing, setViewing] = useState<DocumentRow | null>(null);
   const { data: ws } = useCurrentWorkspace();
 
   const { data: docs, isLoading } = useQuery({
@@ -116,7 +118,13 @@ export default function KnowledgePage() {
                   )}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="font-medium text-ink truncate">{d.name}</div>
+                  <button
+                    type="button"
+                    onClick={() => setViewing(d)}
+                    className="block max-w-full font-medium text-ink truncate text-left hover:text-signal transition-colors"
+                  >
+                    {d.name}
+                  </button>
                   <div className="font-mono text-[11px] text-muted-foreground uppercase mt-0.5">
                     {d.chunkCount} chunks · {(d.charCount / 1000).toFixed(1)}k chars ·{" "}
                     {new Date(d.createdAt).toLocaleDateString()}
@@ -148,6 +156,16 @@ export default function KnowledgePage() {
               qc.invalidateQueries({ queryKey: ["documents", ws.id] });
               setOpen(false);
             }}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {viewing && (
+          <DocumentViewer
+            documentId={viewing.id}
+            fallbackName={viewing.name}
+            onClose={() => setViewing(null)}
           />
         )}
       </AnimatePresence>

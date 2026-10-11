@@ -1,0 +1,14 @@
+Subscription and Billing
+
+Plans are billed monthly on the date you subscribed. You can switch
+plans at any time and the change takes effect immediately, with
+charges prorated.
+
+Cancelling stops the next renewal but does not refund the current month.
+
+Annual plans are billed once per year and include two months free.
+Annual plans can be cancelled within 14 days of purchase for a
+full refund.
+
+Invoices are emailed automatically and are available under Settings,
+then Billing.

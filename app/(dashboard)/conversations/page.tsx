@@ -3,10 +3,11 @@
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 import { MessagesSquare, Bot, User, Globe, PlayCircle } from "lucide-react";
 import { useCurrentWorkspace } from "@/lib/hooks/use-current-workspace";
 import { Reveal } from "@/components/motion/Reveal";
+import { DocumentViewer } from "@/components/dashboard/DocumentViewer";
 
 type ConvRow = {
   id: string;
@@ -16,17 +17,20 @@ type ConvRow = {
   assistant: { name: string } | null;
 };
 
+type Citation = { documentId: string; documentName: string };
+
 type MessageRow = {
   id: string;
   role: "USER" | "ASSISTANT" | "SYSTEM";
   content: string;
-  citations: Array<{ documentName: string }> | null;
+  citations: Citation[] | null;
   createdAt: string;
 };
 
 export default function ConversationsPage() {
   const router = useRouter();
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [viewing, setViewing] = useState<Citation | null>(null);
   const { data: ws } = useCurrentWorkspace();
 
   const { data: convos, isLoading } = useQuery({
@@ -183,12 +187,14 @@ export default function ConversationsPage() {
                       {cites.length > 0 && (
                         <div className="mt-2 flex flex-wrap gap-1.5">
                           {cites.map((c, idx) => (
-                            <span
+                            <button
+                              type="button"
                               key={idx}
-                              className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-moss-dim text-moss uppercase"
+                              onClick={() => setViewing(c)}
+                              className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-moss-dim text-moss uppercase cursor-pointer hover:bg-moss hover:text-paper transition-colors"
                             >
                               [{idx + 1}] {c.documentName}
-                            </span>
+                            </button>
                           ))}
                         </div>
                       )}
@@ -200,6 +206,16 @@ export default function ConversationsPage() {
           )}
         </div>
       </Reveal>
+
+      <AnimatePresence>
+        {viewing && (
+          <DocumentViewer
+            documentId={viewing.documentId}
+            fallbackName={viewing.documentName}
+            onClose={() => setViewing(null)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

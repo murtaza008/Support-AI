@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Nimbus Robotics</title>
+  <style>
+    body { font-family: system-ui, -apple-system, sans-serif; margin: 0; color: #1d1d1f; }
+    .nav {
+      padding: 18px 40px; border-bottom: 1px solid #ececec;
+      font-weight: 600; display: flex; align-items: center; gap: 10px;
+    }
+    .mark {
+      width: 22px; height: 22px; border-radius: 6px; background: #ff5a36;
+      display: inline-flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 13px; font-weight: 700;
+    }
+    .hero { padding: 96px 40px 40px; max-width: 720px; }
+    h1 { font-size: 46px; line-height: 1.08; margin: 0 0 18px; letter-spacing: -0.02em; }
+    .hero p { font-size: 19px; color: #6b6b70; line-height: 1.6; margin: 0 0 28px; max-width: 56ch; }
+    .cta {
+      display: inline-block; background: #1d1d1f; color: #fff; text-decoration: none;
+      padding: 12px 22px; border-radius: 8px; font-size: 15px; font-weight: 500;
+    }
+    .stats { display: flex; gap: 56px; padding: 24px 40px 90px; flex-wrap: wrap; }
+    .stat strong { display: block; font-size: 28px; letter-spacing: -0.01em; }
+    .stat span { font-size: 14px; color: #8a8a90; }
+  </style>
+</head>
+<body>
+  <div class="nav"><span class="mark">N</span> Nimbus Robotics</div>
+
+  <div class="hero">
+    <h1>Warehouse robotics, made simple.</h1>
+    <p>
+      Automate picking, packing and sorting with hardware that installs in a weekend.
+      Trusted by 400+ fulfilment centres across 24 countries.
+    </p>
+    <a class="cta" href="#">Book a demo</a>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><strong>400+</strong><span>Fulfilment centres</span></div>
+    <div class="stat"><strong>24</strong><span>Countries shipped to</span></div>
+    <div class="stat"><strong>2 days</strong><span>Average install time</span></div>
+  </div>
+
+  <!--
+    SupportAI widget. The script must be served by the running app — the widget
+    reads its API base from wherever this src points.
+
+    Local:    http://localhost:3000/api/public/widget/embed.js
+    Deployed: https://<your-app>.vercel.app/api/public/widget/embed.js
+
+    Attribute is data-assistant (not data-assistant-id).
+  -->
+  <script
+    src="http://localhost:3000/api/public/widget/embed.js"
+    data-assistant="769de652-a71a-44bd-9484-1538e3b2fec6"
+    data-title="Chat with Nimbus support"
+    data-color="#ff5a36"></script>
+</body>
+</html>
