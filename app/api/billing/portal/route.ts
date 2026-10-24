@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { requireUserId } from "@/lib/session";
+import { requireNonDemoUserId } from "@/lib/session";
 import { requireWorkspaceRole } from "@/lib/workspace";
 import { handleApiError } from "@/lib/handle-error";
 import { getStripe, isStripeConfigured } from "@/lib/stripe";
@@ -10,7 +10,7 @@ const PortalInput = z.object({ workspaceId: z.string() });
 
 export async function POST(request: Request) {
   try {
-    const userId = await requireUserId();
+    const userId = await requireNonDemoUserId("Managing billing");
     const { workspaceId } = PortalInput.parse(await request.json().catch(() => null));
     await requireWorkspaceRole(userId, workspaceId, ["OWNER", "ADMIN"]);
 

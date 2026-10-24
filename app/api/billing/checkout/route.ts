@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { requireUserId } from "@/lib/session";
+import { requireNonDemoUserId } from "@/lib/session";
 import { requireWorkspaceRole } from "@/lib/workspace";
 import { handleApiError } from "@/lib/handle-error";
 import { getStripe, isStripeConfigured, PLAN_PRICE_ENV } from "@/lib/stripe";
@@ -13,7 +13,7 @@ const CheckoutInput = z.object({
 
 export async function POST(request: Request) {
   try {
-    const userId = await requireUserId();
+    const userId = await requireNonDemoUserId("Changing the subscription plan");
     const { workspaceId, plan } = CheckoutInput.parse(
       await request.json().catch(() => null),
     );

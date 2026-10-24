@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireUserId } from "@/lib/session";
+import { requireNonDemoUserId, requireUserId } from "@/lib/session";
 import { requireWorkspaceMember } from "@/lib/workspace";
 import { handleApiError } from "@/lib/handle-error";
 
@@ -34,7 +34,7 @@ export async function DELETE(
 ) {
   try {
     const { id } = await context.params;
-    const userId = await requireUserId();
+    const userId = await requireNonDemoUserId("Deleting documents");
     const doc = await prisma.document.findUniqueOrThrow({ where: { id } });
     await requireWorkspaceMember(userId, doc.workspaceId);
 

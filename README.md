@@ -9,8 +9,9 @@
 ![pgvector](https://img.shields.io/badge/Neon-Postgres%20%2B%20pgvector-00E599?style=flat-square&logo=postgresql&logoColor=white)
 ![Gemini](https://img.shields.io/badge/AI-Google%20Gemini-8E75B2?style=flat-square&logo=googlegemini&logoColor=white)
 
-**Live demo:** https://support-ai-murex.vercel.app/ — sign up, create a workspace and
-an assistant, upload a document, and chat with it in the playground.
+**Live demo:** https://support-ai-murex.vercel.app/ — click **Try the live demo** to
+explore a fully seeded workspace with no sign-up, or create your own account, upload a
+document, and chat with it in the playground.
 
 SupportAI is a full-stack SaaS platform for businesses that want to automate
 customer support with AI. Upload your help docs (PDF, DOCX, TXT, Markdown, or
@@ -28,13 +29,13 @@ straight from the built-in playground.
 - [Getting started](#getting-started)
 - [Environment variables](#environment-variables)
 - [Embedding the chat widget](#embedding-the-chat-widget)
+- [Public demo mode](#public-demo-mode)
 - [Seeding a demo knowledge base](#seeding-a-demo-knowledge-base)
 - [How the RAG pipeline works](#how-the-rag-pipeline-works)
 - [API routes](#api-routes)
 - [Project structure](#project-structure)
 - [Deploying to Vercel](#deploying-to-vercel)
 - [Known limitations](#known-limitations)
-- [Author](#author)
 - [License](#license)
 
 ## Why this stack is fully free
@@ -69,6 +70,7 @@ without ever creating a Stripe account.
 - **Analytics dashboard** — 30-day messages per day and conversations handled per assistant, with headline stats, charted with Recharts
 - **Team management** — invite teammates by shareable link, change roles, revoke invites and remove members
 - **Billing** — Starter / Pro / Agency plans with real Stripe Checkout + Customer Portal (test mode) or automatic demo-mode fallback
+- **Public demo mode** — one-click "Try demo" into a seeded, read-mostly workspace with two assistants, twelve help docs, a month of conversations and analytics; destructive actions are locked, live chat is rate limited, and a daily cron resets it
 - **Dark mode** — light / dark / system theme toggle (`next-themes`)
 - **Editorial design system** — Fraunces serif + Inter + JetBrains Mono, a paper/ink colour palette, and `motion` animations throughout, including scroll-triggered reveals that **replay every time a section re-enters view** and a type/erase cursor effect on the homepage headline
 
@@ -90,8 +92,8 @@ without ever creating a Stripe account.
 ### 1. Clone and install
 
 ```bash
-git clone https://github.com/murtaza008/Support-AI.git
-cd Support-AI
+git clone <your-repo-url> support-ai
+cd support-ai
 npm install        # also runs `prisma generate` (postinstall)
 ```
 
@@ -116,6 +118,11 @@ STRIPE_PRICE_PRO=""
 STRIPE_PRICE_AGENCY=""
 
 NEXT_PUBLIC_APP_URL="http://localhost:3000"
+
+# Optional: public demo account (see "Public demo mode")
+# node -e "console.log(require('crypto').randomBytes(24).toString('base64url'))"
+DEMO_PASSWORD=""
+CRON_SECRET=""
 ```
 
 ### 2. Create a free Neon Postgres database
@@ -180,6 +187,7 @@ playground.
 | `npm run build` | `next build` (does not change the database schema) |
 | `npm start` | Serve the production build |
 | `npm run lint` | ESLint |
+| `npm run seed:demo` | Create or reset the public demo workspace (see [Public demo mode](#public-demo-mode)) |
 | `npx prisma db push` | Sync `prisma/schema.prisma` (and the `vector` extension) to the database |
 
 ## Environment variables
@@ -194,7 +202,10 @@ playground.
 | `STRIPE_SECRET_KEY` | no | Real Stripe Checkout; empty = demo billing mode |
 | `STRIPE_WEBHOOK_SECRET` | with Stripe | Verifies webhook signatures |
 | `STRIPE_PRICE_PRO` / `STRIPE_PRICE_AGENCY` | with Stripe | Recurring Price IDs |
-| `SEED_USER_EMAIL` | no | Default account for the seed script |
+| `STRIPE_ALLOW_LIVE_KEYS` | no | Live `sk_live_` keys are refused unless this is `true`; test mode is the default |
+| `DEMO_PASSWORD` | for the demo | Random password of the shared demo account; "Try demo" signs in with it server-side |
+| `CRON_SECRET` | for the demo | Protects `/api/cron/demo-reset`; Vercel Cron sends it automatically |
+| `SEED_USER_EMAIL` | no | Account for `scripts/seed-knowledge-base.ts` if you don't pass one |
 
 ## Embedding the chat widget
 
@@ -221,8 +232,44 @@ from `POST /api/public/widget/[assistantId]/chat` (CORS-enabled), and every
 conversation shows up under **Conversations** with the `WIDGET` channel.
 
 To try it locally, open [`scripts/test-site.html`](scripts/test-site.html), a mock
-company page with the snippet already in place. Point its `src` at your running
-app and set `data-assistant` to one of your assistant ids.
+company page with the snippet already in place (pointed at the public demo assistant).
+Point its `src` at your running app and set `data-assistant` to one of your assistant ids.
+Or click **Widget** on any assistant card: `/widget-preview/[assistantId]` loads the real
+widget on a sample website.
+
+## Public demo mode
+
+Visitors can click **Try the live demo** on the landing page or the login page and land
+in a fully seeded workspace without signing up. The button posts to `/api/demo/login`,
+which signs in to the shared account `demo@supportai.demo` on the server using
+`DEMO_PASSWORD`, so the password never reaches the browser.
+
+**What's seeded** ([`lib/demo/`](lib/demo)): an Agency-plan workspace with two assistants,
+*Nimbus Help Bot* (a fictional project-management SaaS) and *Bloom & Co Support* (a fictional
+skincare store), each with its own tone, prompt, brand colour and six Markdown help docs that
+are chunked and embedded through the normal pipeline. There are also 30 conversations
+(1-3 turns each, with citations) spread over the last 30 days, and two extra teammates. All
+names, emails and domains are fictional (`.demo` / `.example`).
+
+**Protections** (enforced in the API, shown in the UI as a friendly toast):
+
+- Blocked for the demo account: deleting or editing assistants, adding/uploading/importing
+  or deleting documents, changing workspace settings, inviting or removing teammates and
+  changing roles, joining or creating other workspaces, Stripe checkout and the billing portal.
+- Allowed: browsing everything, creating up to 6 assistants, and live chat in the playground
+  and the widget, rate limited to **15 messages per hour per visitor** (by hashed IP) and
+  300 per hour for the whole demo.
+- Sign-up refuses the reserved `@supportai.demo` domain.
+
+**Seeding and the daily reset.** `npm run seed:demo` (needs `DEMO_PASSWORD`) creates or resets
+the demo. It only touches the `supportai-demo` workspace and the `@supportai.demo` users.
+[`vercel.json`](vercel.json) schedules `GET /api/cron/demo-reset` daily at 05:00 UTC; it runs
+the same reset, guarded by `CRON_SECRET`. Embeddings are reused: a document is only embedded
+again if its seed text changes, so a normal reset makes no Gemini calls. To run a reset by hand:
+
+```bash
+curl -H "Authorization: Bearer $CRON_SECRET" https://<your-domain>/api/cron/demo-reset
+```
 
 ## Seeding a demo knowledge base
 
@@ -292,6 +339,8 @@ check workspace membership (and role where relevant).
 | `GET` | `/api/conversations` | Conversations in a workspace |
 | `GET` | `/api/conversations/[id]/messages` | Messages with citations |
 | `GET` | `/api/analytics` | 30-day analytics data |
+| `POST` | `/api/demo/login` | "Try demo": sign in to the demo account server-side |
+| `GET` | `/api/cron/demo-reset` | Daily demo reset (Vercel Cron, `CRON_SECRET`) |
 | `GET` | `/api/public/widget/embed.js` | The embeddable widget script |
 | `POST` | `/api/public/widget/[assistantId]/chat` | Public widget chat (CORS, no auth) |
 | `POST` | `/api/billing/checkout` | Stripe Checkout, or instant plan switch in demo mode |
@@ -307,6 +356,7 @@ support-ai/
     login/, signup/              # Auth pages
     onboarding/                  # First-run workspace + assistant wizard
     invite/[token]/              # Team invite acceptance
+    widget-preview/[assistantId]/ # Sample website running the real widget
     (dashboard)/                 # Protected dashboard route group
       dashboard/, assistants/ (+ [id]/playground), knowledge/,
       conversations/, analytics/, team/, settings/, billing/
@@ -326,10 +376,14 @@ support-ai/
     rag.ts                       # Ingest, retrieve, RAG prompt, citations
     gemini.ts                    # Chat model + embeddings
     chunker.ts, parse-file.ts    # Chunking and PDF/DOCX/TXT/MD extraction
+    chat.ts                      # Shared chat-route helpers (history caps, conversation ownership)
+    demo/                        # Demo seed content, reset, rate limit
     prisma.ts, auth.ts, auth.config.ts, session.ts, workspace.ts, stripe.ts, utils.ts
     hooks/                       # TanStack Query hooks
   prisma/schema.prisma           # Data model (users, workspaces, assistants, documents,
                                  # vector chunks, conversations, messages, invites)
+  prisma/seed-demo.ts            # `npm run seed:demo`
+  vercel.json                    # Daily demo-reset cron
   scripts/
     seed-knowledge-base.ts, check-seed.ts
     demo-docs/                   # Four demo help-centre documents
@@ -353,7 +407,10 @@ support-ai/
 4. Deploy. If you use real Stripe, add a webhook endpoint at
    `https://<your-domain>/api/webhooks/stripe` and put its signing secret in
    `STRIPE_WEBHOOK_SECRET`.
-5. Use your **production** domain in the widget snippet. Per-deployment preview URLs
+5. For the public demo, add `DEMO_PASSWORD` and `CRON_SECRET`, run `npm run seed:demo`
+   once against the production database (with the same `DEMO_PASSWORD`), and the cron in
+   `vercel.json` keeps it fresh. The cron can also create the demo from scratch on first run.
+6. Use your **production** domain in the widget snippet. Per-deployment preview URLs
    are usually behind Vercel Deployment Protection, so a widget pointed at one will
    fail on other websites.
 
@@ -361,23 +418,18 @@ support-ai/
 
 - **Plan limits are not enforced.** Assistant, document and message quotas on the
   pricing table are plan copy; the API does not cap them.
-- **The public widget endpoint has no rate limiting.** Anyone with an assistant id
-  can send messages, and each one costs a Gemini call. Add rate limiting before
-  real production use.
+- **The public widget endpoint is only rate limited for the demo assistants.** For
+  your own assistants, anyone with an assistant id can send messages, and each one
+  costs a Gemini call. Add rate limiting before real production use.
 - **Similarity scores are stored but not shown.** Citations (document + similarity)
   are saved on every answer; the Conversations page lists the source documents,
   while the playground and widget show only the inline `[n]` markers.
-- **Resolution rate is always 0%.** Conversations have a `resolved` flag that
-  analytics counts, but nothing in the app sets it yet.
+- **Live conversations are never marked resolved.** Conversations have a `resolved`
+  flag that analytics counts (the demo data sets it), but nothing in the app sets it yet.
 - **Ingestion is synchronous.** A large document is chunked and embedded inside the
   request; on Vercel, uploads are also limited by the 4.5 MB request body cap.
 - **URL import is basic.** The page is fetched server-side and HTML tags are
   stripped; JavaScript-rendered pages may come back nearly empty.
-
-## Author
-
-Built by **Murtaza Mazhar** — [GitHub @murtaza008](https://github.com/murtaza008) ·
-[Repository](https://github.com/murtaza008/Support-AI) · [Live demo](https://support-ai-murex.vercel.app/)
 
 ## License
 

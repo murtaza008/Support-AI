@@ -8,6 +8,7 @@ import { Footer } from "@/components/landing/Footer";
 import { TicketCard } from "@/components/landing/TicketCard";
 import { Reveal } from "@/components/motion/Reveal";
 import { Typewriter } from "@/components/landing/Typewriter";
+import { TryDemoButton } from "@/components/demo/TryDemoButton";
 import {
   MockKnowledge,
   MockAnswer,
@@ -81,12 +82,7 @@ function Hero() {
                 Start free trial
                 <span className="transition-transform group-hover:translate-x-0.5">→</span>
               </Link>
-              <a
-                href="#demo"
-                className="inline-flex items-center gap-2 px-5 py-3 text-ink hover:text-signal transition-colors duration-150"
-              >
-                Watch demo
-              </a>
+              <TryDemoButton label="Try the live demo" />
             </motion.div>
             <motion.div
               initial={{ opacity: 0 }}

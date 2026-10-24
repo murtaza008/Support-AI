@@ -3,6 +3,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, type FormEvent } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import { toast } from "sonner";
 import {
   BookOpen,
   FileText,
@@ -27,6 +28,7 @@ type DocumentRow = {
   charCount: number;
   chunkCount: number;
   createdAt: string;
+  assistant: { name: string } | null;
 };
 
 export default function KnowledgePage() {
@@ -53,7 +55,13 @@ export default function KnowledgePage() {
 
   async function del(id: string) {
     if (!confirm("Delete this document and all its chunks?")) return;
-    await fetch(`/api/documents/${id}`, { method: "DELETE" });
+    const res = await fetch(`/api/documents/${id}`, { method: "DELETE" });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      toast.error(body.error ?? "Could not delete the document");
+      return;
+    }
+    toast.success("Document deleted");
     qc.invalidateQueries({ queryKey: ["documents", ws?.id] });
   }
 
@@ -126,7 +134,8 @@ export default function KnowledgePage() {
                     {d.name}
                   </button>
                   <div className="font-mono text-[11px] text-muted-foreground uppercase mt-0.5">
-                    {d.chunkCount} chunks · {(d.charCount / 1000).toFixed(1)}k chars ·{" "}
+                    {d.assistant?.name ?? "All assistants"} · {d.chunkCount} chunks ·{" "}
+                    {(d.charCount / 1000).toFixed(1)}k chars ·{" "}
                     {new Date(d.createdAt).toLocaleDateString()}
                   </div>
                   {d.status === "ERROR" && d.error && (

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { DEMO_EMAIL_DOMAIN } from "@/lib/demo/constants";
 
 const SignupInput = z.object({
   name: z.string().trim().min(1).max(100).optional(),
@@ -20,6 +21,12 @@ export async function POST(request: Request) {
   }
 
   const email = parsed.data.email.toLowerCase().trim();
+  if (email.endsWith(DEMO_EMAIL_DOMAIN)) {
+    return NextResponse.json(
+      { error: "This email domain is reserved for the demo account." },
+      { status: 400 },
+    );
+  }
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {
     return NextResponse.json(

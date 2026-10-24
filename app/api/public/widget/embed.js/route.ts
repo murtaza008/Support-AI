@@ -77,6 +77,7 @@ function buildEmbedScript(origin: string) {
   function close(){ open = false; if (panel) panel.remove(); panel = null; }
 
   function render(){
+    if (!panel) return;
     var log = panel.querySelector("#sai-log"); log.innerHTML = "";
     if (messages.length === 0) {
       var e = document.createElement("div"); e.className = "sai-empty";
@@ -107,7 +108,7 @@ function buildEmbedScript(origin: string) {
     typing = true; render();
     sendToApi(text).catch(function(err){
       typing = false;
-      messages.push({ role: "assistant", text: "Sorry, something went wrong." });
+      messages.push({ role: "assistant", text: (err && err.userMessage) || "Sorry, something went wrong." });
       render();
       console.error(err);
     });
@@ -126,14 +127,15 @@ function buildEmbedScript(origin: string) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
+    if (res.status === 429) {
+      var limited = new Error("HTTP 429"); limited.userMessage = await res.text(); throw limited;
+    }
     if (!res.ok || !res.body) throw new Error("HTTP " + res.status);
     var newConv = res.headers.get("X-Conversation-Id");
     if (newConv) { conversationId = newConv; sessionStorage.setItem(convKey, newConv); }
 
-    typing = false;
-    messages.push({ role: "assistant", text: "" });
-    render();
-    var idx = messages.length - 1;
+    // Keep the typing dots until the first words arrive; free-tier models can take a while.
+    var idx = -1;
 
     var reader = res.body.getReader();
     var decoder = new TextDecoder();
@@ -148,15 +150,17 @@ function buildEmbedScript(origin: string) {
         if (!line.startsWith("data:")) continue;
         var body = line.slice(5).trim();
         if (!body || body === "[DONE]") continue;
-        try {
-          var evt = JSON.parse(body);
-          if (evt && evt.type === "text-delta" && typeof evt.delta === "string") {
-            messages[idx].text += evt.delta;
-            render();
-          }
-        } catch(_) {}
+        var evt = null;
+        try { evt = JSON.parse(body); } catch(_) { continue; }
+        if (evt && evt.type === "error") throw new Error(evt.errorText || "stream error");
+        if (evt && evt.type === "text-delta" && typeof evt.delta === "string" && evt.delta) {
+          if (idx < 0) { typing = false; messages.push({ role: "assistant", text: "" }); idx = messages.length - 1; }
+          messages[idx].text += evt.delta;
+          render();
+        }
       }
     }
+    if (idx < 0) throw new Error("empty response");
   }
 
   function escapeHtml(s){ return String(s).replace(/[&<>"']/g, function(c){ return { "&":"&amp;","<":"&lt;",">":"&gt;","\\"":"&quot;","'":"&#39;" }[c]; }); }

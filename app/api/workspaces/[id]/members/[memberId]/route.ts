@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { requireUserId } from "@/lib/session";
+import { requireNonDemoUserId } from "@/lib/session";
 import { requireWorkspaceRole, ForbiddenError } from "@/lib/workspace";
 import { handleApiError } from "@/lib/handle-error";
 
@@ -15,7 +15,7 @@ export async function PATCH(
 ) {
   try {
     const { id: workspaceId, memberId } = await context.params;
-    const userId = await requireUserId();
+    const userId = await requireNonDemoUserId("Changing team roles");
     await requireWorkspaceRole(userId, workspaceId, ["OWNER", "ADMIN"]);
 
     const member = await prisma.workspaceMember.findUnique({ where: { id: memberId } });
@@ -41,7 +41,7 @@ export async function DELETE(
 ) {
   try {
     const { id: workspaceId, memberId } = await context.params;
-    const userId = await requireUserId();
+    const userId = await requireNonDemoUserId("Removing team members");
     const callerRole = await requireWorkspaceRole(userId, workspaceId, [
       "OWNER",
       "ADMIN",

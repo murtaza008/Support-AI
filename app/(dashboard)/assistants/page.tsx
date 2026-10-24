@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "motion/react";
 import { useState, type FormEvent } from "react";
-import { Bot, Plus, X, PlayCircle, Code2, Copy, Check } from "lucide-react";
+import { Bot, Plus, X, PlayCircle, Code2, Copy, Check, ExternalLink } from "lucide-react";
 import { useCurrentWorkspace } from "@/lib/hooks/use-current-workspace";
 import { Reveal } from "@/components/motion/Reveal";
 
@@ -13,13 +13,14 @@ type Assistant = {
   name: string;
   tone: string;
   description: string | null;
+  brandColor: string;
   createdAt: string;
 };
 
 export default function AssistantsPage() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
-  const [embedFor, setEmbedFor] = useState<{ id: string; name: string } | null>(null);
+  const [embedFor, setEmbedFor] = useState<Assistant | null>(null);
 
   const { data: ws } = useCurrentWorkspace();
 
@@ -89,11 +90,19 @@ export default function AssistantsPage() {
                 </span>
                 <div className="flex items-center gap-1.5">
                   <button
-                    onClick={() => setEmbedFor({ id: a.id, name: a.name })}
+                    onClick={() => setEmbedFor(a)}
                     className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full hairline bg-paper text-ink hover:border-ink/40 transition-colors"
                   >
                     <Code2 className="size-3" /> Embed
                   </button>
+                  <a
+                    href={`/widget-preview/${a.id}`}
+                    target="_blank"
+                    rel="noopener"
+                    className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full hairline bg-paper text-ink hover:border-ink/40 transition-colors"
+                  >
+                    <ExternalLink className="size-3" /> Widget
+                  </a>
                   <Link
                     href={`/assistants/${a.id}/playground`}
                     className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-ink text-paper hover:bg-signal transition-colors"
@@ -138,6 +147,7 @@ export default function AssistantsPage() {
           <EmbedModal
             assistantId={embedFor.id}
             assistantName={embedFor.name}
+            brandColor={embedFor.brandColor}
             onClose={() => setEmbedFor(null)}
           />
         )}
@@ -289,17 +299,20 @@ function CreateAssistantModal({
 function EmbedModal({
   assistantId,
   assistantName,
+  brandColor,
   onClose,
 }: {
   assistantId: string;
   assistantName: string;
+  brandColor: string;
   onClose: () => void;
 }) {
   const origin = typeof window !== "undefined" ? window.location.origin : "";
+  const attr = (s: string) => s.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
   const snippet = `<script src="${origin}/api/public/widget/embed.js"
   data-assistant="${assistantId}"
-  data-title="${assistantName}"
-  data-color="#FF5A36"
+  data-title="${attr(assistantName)}"
+  data-color="${attr(brandColor)}"
   async></script>`;
   const [copied, setCopied] = useState(false);
 
@@ -367,7 +380,15 @@ function EmbedModal({
           </button>
         </div>
 
-        <div className="mt-6 flex items-center justify-end">
+        <div className="mt-6 flex items-center justify-between gap-3">
+          <a
+            href={`/widget-preview/${assistantId}`}
+            target="_blank"
+            rel="noopener"
+            className="inline-flex items-center gap-1.5 text-sm text-signal font-medium hover:underline"
+          >
+            <ExternalLink className="size-3.5" /> Preview the widget on a sample site
+          </a>
           <button
             type="button"
             onClick={onClose}

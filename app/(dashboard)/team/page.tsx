@@ -76,12 +76,17 @@ export default function TeamPage() {
 
   const deleteInvite = useMutation({
     mutationFn: async (id: string) => {
-      await fetch(`/api/workspaces/${ws!.id}/invites/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/workspaces/${ws!.id}/invites/${id}`, { method: "DELETE" });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? "Could not revoke invite");
+      }
     },
     onSuccess: () => {
       toast.success("Invite revoked");
       qc.invalidateQueries({ queryKey: ["invites", ws?.id] });
     },
+    onError: (e: Error) => toast.error(e.message),
   });
 
   const updateRole = useMutation({
@@ -105,12 +110,17 @@ export default function TeamPage() {
 
   const removeMember = useMutation({
     mutationFn: async (id: string) => {
-      await fetch(`/api/workspaces/${ws!.id}/members/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/workspaces/${ws!.id}/members/${id}`, { method: "DELETE" });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? "Could not remove member");
+      }
     },
     onSuccess: () => {
       toast.success("Member removed");
       qc.invalidateQueries({ queryKey: ["members", ws?.id] });
     },
+    onError: (e: Error) => toast.error(e.message),
   });
 
   function inviteLink(token: string) {

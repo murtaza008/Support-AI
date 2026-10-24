@@ -1,12 +1,15 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
-import { UnauthorizedError } from "@/lib/session";
+import { DemoLockedError, UnauthorizedError } from "@/lib/session";
 import { ForbiddenError } from "@/lib/workspace";
 import { Prisma } from "@/lib/generated/prisma/client";
 
 export function handleApiError(error: unknown) {
   if (error instanceof UnauthorizedError) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  if (error instanceof DemoLockedError) {
+    return NextResponse.json({ error: error.message, demo: true }, { status: 403 });
   }
   if (error instanceof ForbiddenError) {
     return NextResponse.json({ error: error.message }, { status: 403 });

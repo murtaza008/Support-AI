@@ -1,9 +1,10 @@
 /**
  * Seeds a demo assistant + knowledge base into an existing user's workspace.
  *
- *   npx tsx scripts/seed-knowledge-base.ts --dry   # show what it would do, write nothing
- *   npx tsx scripts/seed-knowledge-base.ts         # actually insert
- *   npx tsx scripts/seed-knowledge-base.ts you@mail.com
+ *   npx tsx scripts/seed-knowledge-base.ts you@mail.com --dry   # show what it would do, write nothing
+ *   npx tsx scripts/seed-knowledge-base.ts you@mail.com         # actually insert
+ *
+ * For the public demo account, use `npm run seed:demo` instead.
  *
  * This calls the app's own ingestDocument(), so every document is chunked and
  * embedded through the real pipeline — real Gemini embedding calls, real
@@ -32,7 +33,7 @@ const DRY_RUN = process.argv.includes("--dry");
 const EMAIL = (
   process.argv.slice(2).find((a) => !a.startsWith("--")) ??
   process.env.SEED_USER_EMAIL ??
-  "murtazaaa7798@gmail.com"
+  ""
 ).toLowerCase();
 
 const DOCS_DIR = join(import.meta.dirname, "demo-docs");
@@ -125,6 +126,11 @@ const CONVERSATIONS: {
 const CHAT_CALL_GAP_MS = 7000;
 
 async function main() {
+  if (!EMAIL) {
+    throw new Error(
+      "Pass the account email: npx tsx scripts/seed-knowledge-base.ts you@example.com (or set SEED_USER_EMAIL).",
+    );
+  }
   if (!process.env.DATABASE_URL) {
     throw new Error("DATABASE_URL is not set — check your .env file.");
   }

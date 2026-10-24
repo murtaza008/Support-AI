@@ -13,6 +13,11 @@ type Assistant = {
   createdAt: string;
 };
 
+type AnalyticsSummary = {
+  messages: { id: string }[];
+  conversations: { id: string; resolved: boolean }[];
+};
+
 export default function DashboardPage() {
   const { data: ws } = useCurrentWorkspace();
 
@@ -26,10 +31,27 @@ export default function DashboardPage() {
     enabled: !!ws,
   });
 
+  // Same query key as the Analytics page, so the two share one cached response.
+  const { data: analytics } = useQuery({
+    queryKey: ["analytics", ws?.id],
+    queryFn: async (): Promise<AnalyticsSummary> => {
+      const res = await fetch(`/api/analytics?workspaceId=${ws!.id}`);
+      if (!res.ok) throw new Error("Failed to load analytics");
+      return res.json();
+    },
+    enabled: !!ws,
+  });
+
+  const conversations = analytics?.conversations ?? [];
+  const resolved = conversations.filter((c) => c.resolved).length;
   const kpis = [
     { label: "Assistants", value: assistants?.length ?? 0, icon: Bot },
-    { label: "Messages · 30d", value: 0, icon: MessageSquare },
-    { label: "Resolution rate", value: "—", icon: Zap },
+    { label: "Messages · 30d", value: analytics?.messages.length ?? 0, icon: MessageSquare },
+    {
+      label: "Resolution rate",
+      value: conversations.length > 0 ? `${Math.round((resolved / conversations.length) * 100)}%` : "—",
+      icon: Zap,
+    },
   ];
 
   return (

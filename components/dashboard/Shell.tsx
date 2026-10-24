@@ -3,6 +3,7 @@
 import { useEffect, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { Sidebar } from "./Sidebar";
+import { DemoBanner } from "@/components/demo/DemoBanner";
 import { useCurrentWorkspace } from "@/lib/hooks/use-current-workspace";
 
 export function Shell({ children }: { children: ReactNode }) {
@@ -28,7 +29,10 @@ export function Shell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-paper text-ink flex">
       <Sidebar workspaceName={data.name} />
-      <main className="flex-1 min-w-0">{children}</main>
+      <main className="flex-1 min-w-0">
+        {data.isDemo && <DemoBanner />}
+        {children}
+      </main>
     </div>
   );
 }

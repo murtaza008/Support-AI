@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { requireUserId } from "@/lib/session";
+import { DemoLockedError, requireUser, requireUserId } from "@/lib/session";
+import { DEMO_MAX_ASSISTANTS } from "@/lib/demo/constants";
 import { requireWorkspaceMember } from "@/lib/workspace";
 import { handleApiError } from "@/lib/handle-error";
 
@@ -35,9 +36,18 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const userId = await requireUserId();
+    const user = await requireUser();
+    const userId = user.id;
     const input = CreateAssistantInput.parse(await request.json().catch(() => null));
     await requireWorkspaceMember(userId, input.workspaceId);
+    if (user.isDemo) {
+      const count = await prisma.assistant.count({ where: { workspaceId: input.workspaceId } });
+      if (count >= DEMO_MAX_ASSISTANTS) {
+        throw new DemoLockedError(
+          `The demo allows up to ${DEMO_MAX_ASSISTANTS} assistants. Sign up free to create as many as you like.`,
+        );
+      }
+    }
 
     const assistant = await prisma.assistant.create({
       data: {

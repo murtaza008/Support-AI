@@ -7,10 +7,24 @@ export function isStripeConfigured(): boolean {
 
 let _stripe: Stripe | null = null;
 
+/** Test-mode keys only, unless live mode is switched on deliberately with STRIPE_ALLOW_LIVE_KEYS=true. */
+function isAllowedKey(key: string): boolean {
+  return (
+    key.startsWith("sk_test_") ||
+    key.startsWith("rk_test_") ||
+    process.env.STRIPE_ALLOW_LIVE_KEYS === "true"
+  );
+}
+
 /** Throws if Stripe isn't configured — callers should check `isStripeConfigured()` first. */
 export function getStripe(): Stripe {
   if (!process.env.STRIPE_SECRET_KEY) {
     throw new Error("Stripe is not configured (STRIPE_SECRET_KEY is unset).");
+  }
+  if (!isAllowedKey(process.env.STRIPE_SECRET_KEY)) {
+    throw new Error(
+      "Live Stripe keys are disabled. Use a test-mode key (sk_test_...) or set STRIPE_ALLOW_LIVE_KEYS=true.",
+    );
   }
   if (!_stripe) {
     _stripe = new Stripe(process.env.STRIPE_SECRET_KEY);

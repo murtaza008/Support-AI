@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Nimbus Robotics</title>
+  <title>Nimbus</title>
   <style>
     body { font-family: system-ui, -apple-system, sans-serif; margin: 0; color: #1d1d1f; }
     .nav {
@@ -11,7 +11,7 @@
       font-weight: 600; display: flex; align-items: center; gap: 10px;
     }
     .mark {
-      width: 22px; height: 22px; border-radius: 6px; background: #ff5a36;
+      width: 22px; height: 22px; border-radius: 6px; background: #3d6bff;
       display: inline-flex; align-items: center; justify-content: center;
       color: #fff; font-size: 13px; font-weight: 700;
     }
@@ -28,26 +28,27 @@
   </style>
 </head>
 <body>
-  <div class="nav"><span class="mark">N</span> Nimbus Robotics</div>
+  <div class="nav"><span class="mark">N</span> Nimbus</div>
 
   <div class="hero">
-    <h1>Warehouse robotics, made simple.</h1>
+    <h1>Projects that actually ship.</h1>
     <p>
-      Automate picking, packing and sorting with hardware that installs in a weekend.
-      Trusted by 400+ fulfilment centres across 24 countries.
+      Boards, timelines and docs for teams that hate status meetings.
+      Plan the sprint, track the work, and keep everyone in the loop.
     </p>
-    <a class="cta" href="#">Book a demo</a>
+    <a class="cta" href="#">Start free trial</a>
   </div>
 
   <div class="stats">
-    <div class="stat"><strong>400+</strong><span>Fulfilment centres</span></div>
-    <div class="stat"><strong>24</strong><span>Countries shipped to</span></div>
-    <div class="stat"><strong>2 days</strong><span>Average install time</span></div>
+    <div class="stat"><strong>12k+</strong><span>Teams</span></div>
+    <div class="stat"><strong>4</strong><span>Project views</span></div>
+    <div class="stat"><strong>5 min</strong><span>Average setup</span></div>
   </div>
 
   <!--
-    SupportAI widget. The script must be served by the running app — the widget
-    reads its API base from wherever this src points.
+    SupportAI widget, pointed at the public demo assistant "Nimbus Help Bot"
+    (seeded by `npm run seed:demo`). The script must be served by the running
+    app: the widget reads its API base from wherever this src points.
 
     Local:    http://localhost:3000/api/public/widget/embed.js
     Deployed: https://<your-app>.vercel.app/api/public/widget/embed.js
@@ -56,8 +57,8 @@
   -->
   <script
     src="https://support-ai-murex.vercel.app/api/public/widget/embed.js"
-    data-assistant="769de652-a71a-44bd-9484-1538e3b2fec6"
+    data-assistant="de300000-0000-4000-8000-0000000000a1"
     data-title="Chat with Nimbus support"
-    data-color="#ff5a36"></script>
+    data-color="#3d6bff"></script>
 </body>
 </html>

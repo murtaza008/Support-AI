@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { requireUserId } from "@/lib/session";
+import { requireNonDemoUserId } from "@/lib/session";
 import { createWorkspaceWithMembership } from "@/lib/workspace";
 import { handleApiError } from "@/lib/handle-error";
 
@@ -10,7 +10,7 @@ const CreateWorkspaceInput = z.object({
 
 export async function POST(request: Request) {
   try {
-    const userId = await requireUserId();
+    const userId = await requireNonDemoUserId("Creating workspaces");
     const body = await request.json().catch(() => null);
     const { name } = CreateWorkspaceInput.parse(body);
     const workspace = await createWorkspaceWithMembership(userId, name);

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireUserId } from "@/lib/session";
+import { requireNonDemoUserId } from "@/lib/session";
 import { requireWorkspaceMember } from "@/lib/workspace";
 import { handleApiError } from "@/lib/handle-error";
 import { extractTextFromFile } from "@/lib/parse-file";
@@ -7,7 +7,7 @@ import { ingestDocument } from "@/lib/rag";
 
 export async function POST(request: Request) {
   try {
-    const userId = await requireUserId();
+    const userId = await requireNonDemoUserId("Uploading documents");
     const form = await request.formData();
     const file = form.get("file");
     const workspaceId = form.get("workspaceId");

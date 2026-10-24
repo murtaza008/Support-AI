@@ -1,8 +1,8 @@
 /**
  * Read-only check of the seeded knowledge base, plus a live retrieval test.
  *
- *   npx tsx scripts/check-seed.ts
- *   npx tsx scripts/check-seed.ts "your own question here"
+ *   npx tsx scripts/check-seed.ts you@mail.com
+ *   npx tsx scripts/check-seed.ts you@mail.com "your own question here"
  *
  * The retrieval test runs a real embedding call and a real pgvector query —
  * it proves the seeded documents are actually findable, not just stored.
@@ -11,12 +11,14 @@ import "dotenv/config";
 import { prisma } from "../lib/prisma";
 import { retrieveContext } from "../lib/rag";
 
-const EMAIL = process.env.SEED_USER_EMAIL ?? "murtazaaa7798@gmail.com";
-const QUESTION =
-  process.argv.slice(2).find((a) => !a.startsWith("--")) ??
-  "How many days do I have to request a refund, and who do I email?";
+const args = process.argv.slice(2).filter((a) => !a.startsWith("--"));
+const EMAIL = args[0] ?? process.env.SEED_USER_EMAIL ?? "";
+const QUESTION = args[1] ?? "How many days do I have to request a refund, and who do I email?";
 
 async function main() {
+  if (!EMAIL) {
+    throw new Error("Pass the account email: npx tsx scripts/check-seed.ts you@example.com");
+  }
   const member = await prisma.workspaceMember.findFirst({
     where: { user: { email: EMAIL.toLowerCase() } },
     include: { workspace: true },

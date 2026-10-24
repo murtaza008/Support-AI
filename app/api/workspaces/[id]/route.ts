@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { requireUserId } from "@/lib/session";
+import { requireNonDemoUserId } from "@/lib/session";
 import { requireWorkspaceRole } from "@/lib/workspace";
 import { handleApiError } from "@/lib/handle-error";
 
@@ -19,7 +19,7 @@ export async function PATCH(
 ) {
   try {
     const { id } = await context.params;
-    const userId = await requireUserId();
+    const userId = await requireNonDemoUserId("Changing workspace settings");
     await requireWorkspaceRole(userId, id, ["OWNER", "ADMIN"]);
     const body = await request.json().catch(() => null);
     const data = UpdateWorkspaceInput.parse(body);

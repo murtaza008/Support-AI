@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireUserId } from "@/lib/session";
+import { requireNonDemoUserId } from "@/lib/session";
 import { requireWorkspaceRole } from "@/lib/workspace";
 import { handleApiError } from "@/lib/handle-error";
 
@@ -10,7 +10,7 @@ export async function DELETE(
 ) {
   try {
     const { id: workspaceId, inviteId } = await context.params;
-    const userId = await requireUserId();
+    const userId = await requireNonDemoUserId("Revoking invites");
     await requireWorkspaceRole(userId, workspaceId, ["OWNER", "ADMIN"]);
 
     const invite = await prisma.workspaceInvite.findUnique({ where: { id: inviteId } });

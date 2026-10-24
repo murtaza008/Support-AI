@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { requireUserId } from "@/lib/session";
+import { requireNonDemoUserId } from "@/lib/session";
 import { handleApiError } from "@/lib/handle-error";
 
 const FetchUrlInput = z.object({ url: z.url() });
 
 export async function POST(request: Request) {
   try {
-    await requireUserId();
+    await requireNonDemoUserId("Importing documents from a URL");
     const { url } = FetchUrlInput.parse(await request.json().catch(() => null));
 
     const res = await fetch(url, {

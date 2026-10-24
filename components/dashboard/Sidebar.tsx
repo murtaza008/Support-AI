@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   LayoutDashboard,
   Bot,
@@ -30,9 +31,12 @@ const items = [
 export function Sidebar({ workspaceName }: { workspaceName: string }) {
   const pathname = usePathname();
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   async function handleSignOut() {
     await signOut({ redirect: false });
+    // Drop cached workspace data so the next account in this tab never sees it.
+    queryClient.clear();
     router.push("/");
     router.refresh();
   }

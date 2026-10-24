@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { requireUserId } from "@/lib/session";
+import { requireNonDemoUserId, requireUserId } from "@/lib/session";
 import { requireWorkspaceMember } from "@/lib/workspace";
 import { handleApiError } from "@/lib/handle-error";
 import { ingestDocument } from "@/lib/rag";
@@ -16,6 +16,7 @@ export async function GET(request: Request) {
     const documents = await prisma.document.findMany({
       where: { workspaceId },
       orderBy: { createdAt: "desc" },
+      include: { assistant: { select: { name: true } } },
     });
     return NextResponse.json(documents);
   } catch (error) {
@@ -34,7 +35,7 @@ const IngestInput = z.object({
 
 export async function POST(request: Request) {
   try {
-    const userId = await requireUserId();
+    const userId = await requireNonDemoUserId("Adding documents");
     const input = IngestInput.parse(await request.json().catch(() => null));
     await requireWorkspaceMember(userId, input.workspaceId);
 

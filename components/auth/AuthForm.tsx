@@ -6,8 +6,15 @@ import { useState, type FormEvent } from "react";
 import { motion } from "motion/react";
 import { signIn } from "next-auth/react";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { TryDemoButton } from "@/components/demo/TryDemoButton";
 
-export function AuthForm({ mode }: { mode: "login" | "signup" }) {
+export function AuthForm({
+  mode,
+  demoUnavailable = false,
+}: {
+  mode: "login" | "signup";
+  demoUnavailable?: boolean;
+}) {
   const isSignup = mode === "signup";
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -169,6 +176,25 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
               {loading ? "One sec…" : isSignup ? "Create workspace →" : "Sign in →"}
             </button>
           </form>
+
+          {!isSignup && (
+            <div className="mt-6">
+              <div className="flex items-center gap-3 font-mono-caps text-muted-foreground">
+                <span className="h-px flex-1 bg-line" />
+                or
+                <span className="h-px flex-1 bg-line" />
+              </div>
+              <TryDemoButton
+                label="Try the demo, no sign-up"
+                className="mt-6 w-full"
+              />
+              {demoUnavailable && (
+                <p className="mt-3 text-sm text-destructive text-center">
+                  The demo is unavailable right now. Please try again shortly.
+                </p>
+              )}
+            </div>
+          )}
 
           <p className="mt-8 text-sm text-muted-foreground text-center">
             {isSignup ? "Already have an account? " : "New to SupportAI? "}
