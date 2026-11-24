@@ -3,11 +3,18 @@
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { SceneFallback } from "./SceneFallback";
-import type { HoverInfo } from "./scene/Scene";
+import type { HoverInfo } from "./scene/CssScene";
 import { cn } from "@/lib/utils";
 
-// three.js + R3F live in their own chunk, requested only when the browser is idle.
-const Scene = dynamic(() => import("./scene/Scene"), { ssr: false });
+// The scene is client-only (it measures its box); the still image shows until it mounts.
+const Scene = dynamic(() => import("./scene/CssScene"), {
+  ssr: false,
+  loading: () => (
+    <div className="absolute inset-0 flex items-center justify-center p-6">
+      <SceneFallback />
+    </div>
+  ),
+});
 
 const STEPS = [
   {
@@ -37,21 +44,6 @@ const STEPS = [
   },
 ] as const;
 
-const noop = () => () => {};
-function useWebGL() {
-  return useSyncExternalStore(
-    noop,
-    () => {
-      try {
-        const c = document.createElement("canvas");
-        return !!(c.getContext("webgl2") ?? c.getContext("webgl"));
-      } catch {
-        return false;
-      }
-    },
-    () => true,
-  );
-}
 function useReducedMotion() {
   return useSyncExternalStore(
     (cb) => {
@@ -69,13 +61,8 @@ export function Story() {
   const stageRef = useRef<HTMLDivElement>(null);
   const progressRef = useRef(0);
   const [step, setStep] = useState(0);
-  const [load, setLoad] = useState(false);
-  const [ready, setReady] = useState(false);
-  // Each real context loss remounts a fresh canvas; after 3 we keep the still image.
-  const [attempt, setAttempt] = useState(0);
   const [active, setActive] = useState(false);
   const [tip, setTip] = useState<(NonNullable<HoverInfo> & { w: number }) | null>(null);
-  const webgl = useWebGL();
   const reducedMotion = useReducedMotion();
 
   // Scroll progress through the section, 0..4 (one unit per stage change).
@@ -113,22 +100,6 @@ export function Story() {
     return () => io.disconnect();
   }, []);
 
-  // Load the 3D chunk once the browser is idle (the headline has painted by then).
-  useEffect(() => {
-    if (!webgl) return;
-    if ("requestIdleCallback" in window) {
-      const id = window.requestIdleCallback(() => setLoad(true), { timeout: 2500 });
-      return () => window.cancelIdleCallback(id);
-    }
-    const t = setTimeout(() => setLoad(true), 1200);
-    return () => clearTimeout(t);
-  }, [webgl]);
-
-  const onReady = useCallback(() => setReady(true), []);
-  const onLost = useCallback(() => {
-    setReady(false);
-    setAttempt((a) => a + 1);
-  }, []);
   // Tooltip position relative to the stage, computed in the event handler.
   const onHover = useCallback((info: HoverInfo) => {
     const r = stageRef.current?.getBoundingClientRect();
@@ -145,27 +116,7 @@ export function Story() {
             className="pointer-events-none relative h-full w-full lg:pointer-events-auto"
             onPointerLeave={() => setTip(null)}
           >
-            <div
-              className={cn(
-                "absolute inset-0 flex items-center justify-center p-6 transition-opacity duration-500",
-                ready ? "opacity-0" : "opacity-100",
-              )}
-            >
-              <SceneFallback />
-            </div>
-            {webgl && load && attempt < 3 && (
-              <div className={cn("absolute inset-0 transition-opacity duration-700", ready ? "opacity-100" : "opacity-0")}>
-                <Scene
-                  key={attempt}
-                  progressRef={progressRef}
-                  active={active}
-                  reducedMotion={reducedMotion}
-                  onHover={onHover}
-                  onReady={onReady}
-                  onLost={onLost}
-                />
-              </div>
-            )}
+            <Scene progressRef={progressRef} active={active} reducedMotion={reducedMotion} onHover={onHover} />
             {tip && (
               <div
                 role="tooltip"

@@ -124,7 +124,7 @@ for (const theme of themes) {
       await page.waitForTimeout(2000);
       await page.screenshot({ path: path.join(out, `landing-${theme}.png`) });
       await page.locator("#how-it-works ol > li").nth(4).scrollIntoViewIfNeeded();
-      await page.locator("#how-it-works canvas").waitFor({ timeout: 20_000 });
+      await page.locator("[data-scene=css3d]").waitFor({ timeout: 20_000 });
       await page.waitForTimeout(2500);
       await page.screenshot({ path: path.join(out, `landing-3d-${theme}.png`) });
       await ctx.close();
@@ -154,7 +154,7 @@ test.describe("landing review", () => {
       await shot(page, "landing-hero-mid", theme);
       await page.waitForTimeout(1200);
       await shot(page, "landing-hero", theme);
-      await expect(page.locator("#how-it-works canvas")).toHaveCount(1, { timeout: 15_000 });
+      await expect(page.locator("[data-scene-tile]")).toHaveCount(96, { timeout: 15_000 });
       const steps = page.locator("#how-it-works ol > li");
       for (let i = 0; i < 5; i++) {
         await steps.nth(i).scrollIntoViewIfNeeded();
@@ -163,7 +163,7 @@ test.describe("landing review", () => {
         await shot(page, `landing-stage-${i}`, theme);
       }
       // Hover a tile in the answer stage.
-      const box = await page.locator("#how-it-works canvas").boundingBox();
+      const box = await page.locator("[data-scene=css3d]").boundingBox();
       if (box) {
         await page.mouse.move(box.x + box.width * 0.5, box.y + box.height * 0.78);
         await page.waitForTimeout(500);

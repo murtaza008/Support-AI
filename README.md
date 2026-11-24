@@ -81,7 +81,7 @@ without ever creating a Stripe account.
 - **Team management** — invite by shareable link, change roles, revoke invites, remove members or leave, with a permissions table that matches the API's checks
 - **Billing** — Starter / Pro / Agency plans with real Stripe Checkout + Customer Portal (test mode) or automatic demo-mode fallback
 - **Public demo mode** — one-click "Try demo" into a seeded, read-mostly workspace with two assistants, twelve help docs, a month of conversations and analytics; destructive actions are locked, live chat is rate limited, and a daily cron resets it
-- **Landing page** — a WebGL scroll story (React Three Fiber) of the RAG pipeline, live demos that run the real chunker, and only true numbers
+- **Landing page** — a 3D scroll story of the RAG pipeline (CSS 3D transforms, so it runs in every browser without WebGL), live demos that run the real chunker, and only true numbers
 - **Light, dark and system themes** — applied before first paint, switched with a circular reveal
 
 ## Screenshots
@@ -108,7 +108,7 @@ Regenerate them with `npm run screens` (needs a production build and the demo ac
 
 - **Framework:** Next.js 16 (App Router, Route Handlers, `proxy.ts`), React 19, TypeScript 5
 - **Styling:** Tailwind CSS v4 with CSS-variable tokens, Radix primitives, `next-themes` for light/dark/system
-- **3D & motion:** three.js + React Three Fiber (landing only, lazy-loaded), Lenis (landing only), Motion's `LazyMotion` (landing only), CSS + Web Animations API in the app
+- **3D & motion:** CSS 3D transforms for the landing scroll story (no WebGL, works on any GPU or driver), Lenis (landing only), Motion's `LazyMotion` (landing only), CSS + Web Animations API in the app
 - **Database:** Neon Postgres + Prisma 7 (via the `@prisma/adapter-neon` driver adapter) + pgvector (`vector(768)` column, queried with raw SQL)
 - **Auth:** NextAuth.js v5, Credentials provider, JWT sessions, bcrypt password hashing
 - **AI:** Vercel AI SDK (`ai`, `@ai-sdk/google`, `@ai-sdk/react` `useChat`) + Google Gemini
@@ -412,7 +412,7 @@ production build, before and after the redesign:
 
 | Route | Before | After | Change |
 |---|---|---|---|
-| `/` | 255.9 kB | 272.6 kB | +16.7 kB |
+| `/` | 255.9 kB | 272.3 kB | +16.4 kB |
 | `/login` | 248.7 kB | 228.6 kB | -20.1 kB |
 | `/signup` | 248.7 kB | 228.6 kB | -20.1 kB |
 | `404 page` | 203.2 kB | 218 kB | +14.8 kB |
@@ -428,9 +428,9 @@ production build, before and after the redesign:
 
 The app pages carry the new shell (command palette, hover cards, menus and dialogs); analytics is smaller because charts now load lazily, and sign-in is smaller because it no longer ships the old animation library.
 
-- three.js and React Three Fiber are a separate chunk the landing page requests when the
-  browser is idle; it renders only while on screen, caps the pixel ratio at 1.5 and uses
-  one shadow pass. Without WebGL a still image is shown.
+- The landing story is CSS 3D (96 elements moved with `translate3d`/`rotate` in one
+  animation-frame loop outside React), so it needs no WebGL and no 3D library download.
+  It updates only while on screen, and a still image is in the server HTML until it mounts.
 - Recharts loads with the first chart; the command palette loads on idle or on hover of
   the search button.
 - Every page's code is prefetched while the browser is idle after sign-in, and hovering a
@@ -460,7 +460,7 @@ support-ai/
     dashboard/                   # Shell, Sidebar, Topbar, CommandPalette, Notifications, DocumentViewer
     data/                        # KPI tile, sparkline, bar list, heatmap, lazy trend chart
     landing/                     # Landing sections, scroll story, demos
-      scene/                     # Lazy-loaded React Three Fiber scene (layouts, textures)
+      scene/                     # CSS 3D scene: stage layouts, content, renderer
     layout/, brand/, auth/       # Standalone-page layout, logo, sign-in form
     theme-toggle.tsx             # Light / dark / system with circular reveal
   lib/

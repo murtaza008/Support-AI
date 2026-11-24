@@ -1,6 +1,6 @@
 /**
- * Still image of the story's last stage (answer + cited sources). Shown while
- * the 3D scene loads and permanently when WebGL is unavailable.
+ * Still image of the story's last stage (answer + cited sources). Shown in
+ * the server HTML and until the interactive scene mounts (and without JS).
  */
 export function SceneFallback() {
   const dots = Array.from({ length: 42 }, (_, i) => {

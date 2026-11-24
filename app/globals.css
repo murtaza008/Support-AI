@@ -423,6 +423,67 @@
   animation: skeleton 1.4s ease-in-out infinite;
 }
 
+/* ---------- landing scene (CSS 3D) ---------- */
+
+/* A chunk of a help doc: a small page with lines of text. --hl (0..1) blends
+   it to the accent when it is retrieved. */
+.scene-tile {
+  --hl: 0;
+  border-radius: calc(var(--u) * 0.025);
+  border: 1px solid var(--border-strong);
+  background-color: color-mix(in oklch, var(--accent) calc(var(--hl) * 100%), var(--surface));
+  background-image: repeating-linear-gradient(
+    to bottom,
+    color-mix(in oklch, var(--accent-fg) calc(var(--hl) * 70%), var(--border-strong)) 0 2px,
+    transparent 2px 6px
+  );
+  background-size: 78% 62%;
+  background-position: 22% 55%;
+  background-repeat: no-repeat;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08), 0 6px 14px -8px rgba(0, 0, 0, 0.25);
+  backface-visibility: visible;
+  will-change: transform, opacity;
+  cursor: default;
+}
+.dark .scene-tile {
+  box-shadow: inset 0 1px 0 var(--highlight), 0 8px 18px -10px rgba(0, 0, 0, 0.7);
+}
+
+.scene-card {
+  border-radius: calc(var(--u) * 0.09);
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  padding: calc(var(--u) * 0.12) calc(var(--u) * 0.15);
+  box-shadow: inset 0 1px 0 var(--highlight), var(--shadow-lg-v);
+  will-change: transform, opacity;
+}
+.scene-card-answer {
+  border-color: var(--accent);
+}
+.scene-card-label {
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: max(10px, calc(var(--u) * 0.075));
+  color: var(--fg-muted);
+}
+.scene-card-label-accent {
+  color: var(--accent-text);
+}
+.scene-card-title {
+  margin-top: calc(var(--u) * 0.04);
+  font-weight: 600;
+  font-size: max(12px, calc(var(--u) * 0.115));
+  line-height: 1.3;
+  color: var(--fg);
+}
+.scene-card-body {
+  margin-top: calc(var(--u) * 0.05);
+  font-size: max(12px, calc(var(--u) * 0.105));
+  line-height: 1.45;
+  color: var(--fg);
+}
+
 /* Radix popovers / hover cards / menus */
 [data-radix-popper-content-wrapper] [data-state="open"][data-side] {
   animation: pop-in 180ms var(--ease-out-expo) both;
