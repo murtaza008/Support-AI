@@ -348,7 +348,8 @@ its quota part-way; whatever was saved stays, so run it again later to finish.
    with the assistant's tone, description and custom instructions. The model is
    told to answer only from that context, to say so honestly when the answer is not
    there, and to cite sources as `[1]`, `[2]`. `gemini-flash-latest` streams the
-   answer; the user message, the answer and its citations (document + similarity)
+   answer (when Google reports that model overloaded, the same request goes to
+   `gemini-flash-lite-latest` instead of failing); the user message, the answer and its citations (document + similarity)
    are saved to the conversation.
 
 ## API routes

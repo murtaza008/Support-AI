@@ -1,11 +1,49 @@
 import { google } from "@ai-sdk/google";
-import { embedMany } from "ai";
+import { APICallError, embedMany, wrapLanguageModel, type LanguageModelMiddleware } from "ai";
 
-/** Free-tier Gemini chat model used for streaming RAG answers.
- * "gemini-flash-latest" is a rolling alias to Google's current flash model,
- * so this stays valid as Gemini versions are retired/replaced over time. */
+/** Free-tier Gemini models for answers. Rolling aliases, so they stay valid as
+ * Google retires versions. When the main model is overloaded (Google returns
+ * 503 "high demand", or 429 when the free quota is hit), the same request goes
+ * to the lighter model instead of failing. */
+export const PRIMARY_CHAT_MODEL = "gemini-flash-latest";
+export const FALLBACK_CHAT_MODEL = "gemini-flash-lite-latest";
+
+/** Errors worth retrying on another model: overloaded, rate limited, or a server error. */
+export function isOverloaded(error: unknown): boolean {
+  return APICallError.isInstance(error) && [429, 500, 502, 503, 504].includes(error.statusCode ?? 0);
+}
+
+type FallbackModel = Pick<ReturnType<typeof google>, "doGenerate" | "doStream">;
+
+/** Sends the call to `fallback` when the wrapped model reports it is overloaded. */
+export function fallbackMiddleware(fallback: FallbackModel): LanguageModelMiddleware {
+  return {
+    wrapGenerate: async ({ doGenerate, params }) => {
+      try {
+        return await doGenerate();
+      } catch (error) {
+        if (!isOverloaded(error)) throw error;
+        console.warn(`[gemini] ${PRIMARY_CHAT_MODEL} unavailable, using ${FALLBACK_CHAT_MODEL}`);
+        return fallback.doGenerate(params);
+      }
+    },
+    wrapStream: async ({ doStream, params }) => {
+      try {
+        return await doStream();
+      } catch (error) {
+        if (!isOverloaded(error)) throw error;
+        console.warn(`[gemini] ${PRIMARY_CHAT_MODEL} unavailable, using ${FALLBACK_CHAT_MODEL}`);
+        return fallback.doStream(params);
+      }
+    },
+  };
+}
+
 export function chatModel() {
-  return google("gemini-flash-latest");
+  return wrapLanguageModel({
+    model: google(PRIMARY_CHAT_MODEL),
+    middleware: fallbackMiddleware(google(FALLBACK_CHAT_MODEL)),
+  });
 }
 
 const EMBEDDING_MODEL = "gemini-embedding-2";
