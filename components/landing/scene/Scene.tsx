@@ -44,6 +44,8 @@ type Props = {
   reducedMotion: boolean;
   onHover: (info: HoverInfo) => void;
   onReady?: () => void;
+  /** The browser dropped the WebGL context; the page shows the still image instead. */
+  onLost?: () => void;
 };
 
 /** Theme palette that follows the html `dark` class. */
@@ -61,7 +63,7 @@ const dummy = new Object3D();
 const tmpColor = new Color();
 const tmpVec = new Vector3();
 
-function World({ progressRef, reducedMotion, onHover, onReady }: Omit<Props, "active">) {
+function World({ progressRef, reducedMotion, onHover, onReady }: Omit<Props, "active" | "onLost">) {
   const palette = usePalette();
   const group = useRef<Group>(null);
   const tiles = useRef<InstancedMesh>(null);
@@ -95,7 +97,8 @@ function World({ progressRef, reducedMotion, onHover, onReady }: Omit<Props, "ac
   );
 
   const colors = useMemo(() => {
-    const base = new Color(palette.dark ? "#3a4246" : palette.surface);
+    // Light theme: a warm paper tone, a step darker than the page, so tiles never wash out to white.
+    const base = new Color(palette.dark ? "#3a4246" : "#efece6");
     return { base, lit: new Color(palette.accentText), bg: new Color(palette.bg) };
   }, [palette]);
 
@@ -123,8 +126,11 @@ function World({ progressRef, reducedMotion, onHover, onReady }: Omit<Props, "ac
     // Tiles move every frame; a fixed bounding sphere keeps raycasts valid.
     if (tiles.current) tiles.current.boundingSphere = new Sphere(new Vector3(), 8);
     progress.current = progressRef.current ?? 0;
-    onReady?.();
-  }, [onReady, progressRef]);
+  }, [progressRef]);
+
+  // Report ready only once real frames have been drawn, so the still image
+  // never gives way to an empty canvas while shaders compile.
+  const frames = useRef(0);
 
   useFrame((state, dt) => {
     // Fit the whole stage in view at any aspect ratio.
@@ -164,6 +170,7 @@ function World({ progressRef, reducedMotion, onHover, onReady }: Omit<Props, "ac
         mesh.setColorAt(i, tmpColor);
       }
       mesh.instanceMatrix.needsUpdate = true;
+      if (frames.current < 2 && ++frames.current === 2) onReady?.();
       if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
     }
 
@@ -207,10 +214,10 @@ function World({ progressRef, reducedMotion, onHover, onReady }: Omit<Props, "ac
 
   return (
     <>
-      <ambientLight intensity={palette.dark ? 1.1 : 1.6} />
+      <ambientLight intensity={palette.dark ? 1.1 : 1.15} />
       <directionalLight
         position={[3, 5, 4]}
-        intensity={palette.dark ? 1.5 : 1.7}
+        intensity={palette.dark ? 1.5 : 1.6}
         castShadow
         shadow-mapSize={[1024, 1024]}
         shadow-camera-left={-4}
@@ -218,6 +225,7 @@ function World({ progressRef, reducedMotion, onHover, onReady }: Omit<Props, "ac
         shadow-camera-top={4}
         shadow-camera-bottom={-4}
         shadow-bias={-0.0004}
+        shadow-radius={4}
       />
       <group ref={group}>
         <instancedMesh
@@ -265,15 +273,34 @@ function World({ progressRef, reducedMotion, onHover, onReady }: Omit<Props, "ac
   );
 }
 
-export default function Scene({ active, ...props }: Props) {
+export default function Scene({ active, onLost, ...props }: Props) {
+  // R3F force-loses the context when it disposes the renderer on unmount
+  // (including React Strict Mode's dev double-mount). Only a loss while we
+  // are still mounted is a real one.
+  const alive = useRef(true);
+  useEffect(() => {
+    alive.current = true;
+    return () => {
+      alive.current = false;
+    };
+  }, []);
+
   return (
     <Canvas
       dpr={[1, 1.5]}
-      frameloop={active ? "always" : "never"}
-      shadows="soft"
+      // Off screen: render only on demand (resize, theme change) instead of never,
+      // so the canvas is never left blank or stretched.
+      frameloop={active ? "always" : "demand"}
+      shadows
       camera={{ position: [0, 0.1, 6.6], fov: 36 }}
       gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
       onPointerMissed={() => props.onHover(null)}
+      onCreated={({ gl }) => {
+        gl.domElement.addEventListener("webglcontextlost", (e) => {
+          e.preventDefault();
+          if (alive.current) onLost?.();
+        });
+      }}
       aria-hidden
     >
       <World {...props} />

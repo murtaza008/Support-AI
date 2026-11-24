@@ -42,6 +42,22 @@ test.describe("landing page", () => {
     await expect(tip).toContainText(/chunk|help doc|Source/);
   });
 
+  test("recovers with a fresh canvas if the WebGL context is lost", async ({ page }) => {
+    await page.goto("/");
+    const canvas = page.locator("#how-it-works canvas");
+    await expect(canvas).toHaveCount(1, { timeout: 15_000 });
+    await page.locator("#how-it-works").scrollIntoViewIfNeeded();
+    const before = await canvas.evaluate((c) => (c.dataset.id = "first"));
+    expect(before).toBe("first");
+    await page.evaluate(() => {
+      const c = document.querySelector<HTMLCanvasElement>("#how-it-works canvas")!;
+      const gl = c.getContext("webgl2") ?? c.getContext("webgl");
+      gl?.getExtension("WEBGL_lose_context")?.loseContext();
+    });
+    // A new canvas (not the lost one) takes over.
+    await expect(page.locator("#how-it-works canvas:not([data-id=first])")).toHaveCount(1, { timeout: 15_000 });
+  });
+
   test("falls back to a still image without WebGL", async ({ page }) => {
     await page.addInitScript(() => {
       const orig = HTMLCanvasElement.prototype.getContext;

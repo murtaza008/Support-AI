@@ -5,7 +5,7 @@
 /*
  * SupportAI design system
  *
- * Calm, warm-neutral surfaces with a single pine accent. Every colour is a CSS
+ * Calm, warm-neutral surfaces with a single terracotta accent. Every colour is a CSS
  * variable with a light and a dark value; Tailwind utilities read the variable,
  * so one class works in both themes. Run `npm run check:contrast` after changing
  * any value: it checks every text/background pair against WCAG AA.
@@ -104,29 +104,32 @@
   --fg-subtle: #62686b;
   --border: #e0e0d8;
   --border-strong: #c3c3b9;
-  --accent: #0e6b5d;
-  --accent-hover: #0a5a4e;
+  --accent: #b3471f;
+  --accent-hover: #9c3c19;
   --accent-fg: #ffffff;
-  --accent-soft: #e1efea;
-  --accent-text: #0b5f52;
+  --accent-soft: #f8e6dd;
+  --accent-text: #9e3d19;
   --success: #2f7d4f;
   --success-soft: #e4f1e8;
   --success-text: #23663f;
   --warning: #b7791f;
   --warning-soft: #fbf0da;
   --warning-text: #7a4e0c;
-  --danger: #b42318;
+  --danger: #b0173a;
   --danger-fg: #ffffff;
-  --danger-soft: #fcebe8;
-  --danger-text: #a51f15;
+  --danger-soft: #fbe8ec;
+  --danger-text: #a3132f;
   --inverse: #1b1e20;
   --inverse-fg: #f3f3ef;
   --inverse-muted: #b4b9b7;
-  --focus: #0e6b5d;
-  --chart-1: #0e6b5d;
+  --focus: #b3471f;
+  /* Categorical order: chart-1, chart-3, chart-4 (terracotta, blue, plum),
+     validated with the dataviz palette checks for CVD separation and chroma.
+     chart-2 is the neutral "other / previous period" mark. */
+  --chart-1: #c0501f;
   --chart-2: #8b8f86;
-  --chart-3: #b7791f;
-  --chart-4: #5f6f8a;
+  --chart-3: #3f6fc4;
+  --chart-4: #a8458c;
 }
 
 :root {
@@ -154,29 +157,29 @@
   --fg-subtle: #8f9593;
   --border: #272c2e;
   --border-strong: #3d4447;
-  --accent: #157a6a;
-  --accent-hover: #11695b;
+  --accent: #b3471f;
+  --accent-hover: #9c3c19;
   --accent-fg: #ffffff;
-  --accent-soft: #11302a;
-  --accent-text: #5fcdb5;
+  --accent-soft: #3a1f15;
+  --accent-text: #f0997a;
   --success: #3fa66a;
   --success-soft: #13291c;
   --success-text: #74cf98;
   --warning: #d9a447;
   --warning-soft: #2d2412;
   --warning-text: #e8bb68;
-  --danger: #c0392b;
+  --danger: #c0263f;
   --danger-fg: #ffffff;
-  --danger-soft: #331a18;
-  --danger-text: #f2917f;
+  --danger-soft: #351820;
+  --danger-text: #f58da0;
   --inverse: #eceeec;
   --inverse-fg: #16181a;
   --inverse-muted: #4d5356;
-  --focus: #5fcdb5;
-  --chart-1: #3fb39b;
+  --focus: #f0997a;
+  --chart-1: #cc6436;
   --chart-2: #80878a;
-  --chart-3: #d9a447;
-  --chart-4: #8b9dc0;
+  --chart-3: #6d8fd8;
+  --chart-4: #c565a6;
 }
 
 .dark {
@@ -204,9 +207,9 @@
     --fg-subtle: #62686b;
     --border: #e0e0d8;
     --border-strong: #c3c3b9;
-    --accent: #0e6b5d;
-    --accent-soft: #e1efea;
-    --accent-text: #0b5f52;
+    --accent: #b3471f;
+    --accent-soft: #f8e6dd;
+    --accent-text: #9e3d19;
     --highlight: rgba(255, 255, 255, 0);
     --shadow-xs-v: none;
     --shadow-sm-v: none;
@@ -378,6 +381,21 @@
   from {
     transform: translateX(100%);
   }
+}
+
+@keyframes draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* SVG lines draw in from left to right (set pathLength="1" on the path). */
+@utility draw-in {
+  stroke-dasharray: 1;
+  animation: draw 900ms var(--ease-out-expo) both;
 }
 
 @keyframes skeleton {

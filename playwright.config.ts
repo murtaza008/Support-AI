@@ -16,11 +16,13 @@ export default defineConfig({
   globalSetup: "./tests/e2e/global-setup.ts",
   outputDir: "tests/e2e/.results",
   fullyParallel: true,
-  workers: process.env.CI ? 2 : 4,
+  // Two workers: every app page waits on a remote database, so more parallel
+  // browsers only queue requests and cause timeouts.
+  workers: 2,
   // The DB is a remote Neon instance; one retry absorbs network blips.
   retries: 1,
-  timeout: 45_000,
-  expect: { timeout: 10_000 },
+  timeout: 90_000,
+  expect: { timeout: 15_000 },
   reporter: process.env.CI ? "github" : [["list"]],
   use: {
     baseURL,

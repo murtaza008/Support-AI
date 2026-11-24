@@ -2,6 +2,7 @@
 
 import { queryOptions, type QueryClient } from "@tanstack/react-query";
 import type { ActivityEvent } from "@/lib/activity";
+import type { Gap, TopDocument } from "@/lib/analytics";
 import type { WorkspaceSummary } from "@/lib/workspace-summary";
 
 /**
@@ -63,6 +64,15 @@ export type AnalyticsData = {
   assistants: { id: string; name: string }[];
 };
 
+/** Full response of GET /api/analytics (original fields plus comparisons). */
+export type AnalyticsResponse = AnalyticsData & {
+  days: 7 | 30 | 90;
+  previous: { conversations: number; messages: number; resolved: number };
+  answers: { total: number; cited: number };
+  topDocuments: TopDocument[];
+  gaps: Gap[];
+};
+
 export type MemberRow = {
   id: string;
   userId: string;
@@ -102,10 +112,10 @@ export const q = {
       queryKey: ["conversations", wsId],
       queryFn: () => getJson<ConversationRow[]>(`/api/conversations?workspaceId=${wsId}`, "conversations"),
     }),
-  analytics: (wsId: string) =>
+  analytics: (wsId: string, days: 7 | 30 | 90 = 30) =>
     queryOptions({
-      queryKey: ["analytics", wsId],
-      queryFn: () => getJson<AnalyticsData>(`/api/analytics?workspaceId=${wsId}`, "analytics"),
+      queryKey: ["analytics", wsId, days],
+      queryFn: () => getJson<AnalyticsResponse>(`/api/analytics?workspaceId=${wsId}&days=${days}`, "analytics"),
     }),
   members: (wsId: string) =>
     queryOptions({

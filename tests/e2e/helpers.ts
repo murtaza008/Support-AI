@@ -18,6 +18,14 @@ export async function useTheme(page: Page, theme: Theme) {
 export async function expectAccessible(page: Page, label: string) {
   // Let entry animations settle so colours are measured at their final values.
   await page.waitForTimeout(150);
+  await page
+    .evaluate(() =>
+      Promise.race([
+        Promise.all(document.getAnimations().filter((a) => a.effect?.getTiming().iterations !== Infinity).map((a) => a.finished)),
+        new Promise((r) => setTimeout(r, 3000)),
+      ]),
+    )
+    .catch(() => {});
   const results = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
     .analyze();
@@ -79,6 +87,9 @@ export const DEMO_NIMBUS_ASSISTANT_ID = "de300000-0000-4000-8000-0000000000a1";
 
 /** The page is loaded: the breadcrumb names it and the page has its h1. */
 export async function expectPage(page: Page, label: string) {
-  await expect(page.getByRole("navigation", { name: "Breadcrumb" }).getByText(label, { exact: true })).toBeVisible();
-  await expect(page.locator("main h1").first()).toBeVisible();
+  // Generous: the test DB is a remote Neon instance (~0.6s per request from a dev machine).
+  await expect(page.getByRole("navigation", { name: "Breadcrumb" }).getByText(label, { exact: true })).toBeVisible({
+    timeout: 30_000,
+  });
+  await expect(page.locator("main h1").first()).toBeVisible({ timeout: 20_000 });
 }

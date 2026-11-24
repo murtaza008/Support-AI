@@ -71,6 +71,8 @@ export function Story() {
   const [step, setStep] = useState(0);
   const [load, setLoad] = useState(false);
   const [ready, setReady] = useState(false);
+  // Each real context loss remounts a fresh canvas; after 3 we keep the still image.
+  const [attempt, setAttempt] = useState(0);
   const [active, setActive] = useState(false);
   const [tip, setTip] = useState<(NonNullable<HoverInfo> & { w: number }) | null>(null);
   const webgl = useWebGL();
@@ -123,6 +125,10 @@ export function Story() {
   }, [webgl]);
 
   const onReady = useCallback(() => setReady(true), []);
+  const onLost = useCallback(() => {
+    setReady(false);
+    setAttempt((a) => a + 1);
+  }, []);
   // Tooltip position relative to the stage, computed in the event handler.
   const onHover = useCallback((info: HoverInfo) => {
     const r = stageRef.current?.getBoundingClientRect();
@@ -147,14 +153,16 @@ export function Story() {
             >
               <SceneFallback />
             </div>
-            {webgl && load && (
+            {webgl && load && attempt < 3 && (
               <div className={cn("absolute inset-0 transition-opacity duration-700", ready ? "opacity-100" : "opacity-0")}>
                 <Scene
+                  key={attempt}
                   progressRef={progressRef}
                   active={active}
                   reducedMotion={reducedMotion}
                   onHover={onHover}
                   onReady={onReady}
+                  onLost={onLost}
                 />
               </div>
             )}

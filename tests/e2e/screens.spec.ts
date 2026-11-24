@@ -136,3 +136,47 @@ test.describe("landing review", () => {
     });
   }
 });
+
+test.describe("data review", () => {
+  for (const theme of themes) {
+    test(`data ${theme}`, async ({ page }) => {
+      test.skip(!want("data"));
+      await page.setViewportSize({ width: 1440, height: 900 });
+      await page.emulateMedia({ colorScheme: theme });
+      await page.addInitScript((t) => localStorage.setItem("theme", t), theme);
+      await page.goto("/dashboard");
+      const kpi = page.getByRole("region", { name: "Last 30 days" }).locator("[data-value]").first();
+      await kpi.waitFor({ timeout: 60_000 });
+      await page.waitForTimeout(250);
+      await shot(page, "dashboard-mid", theme);
+      await page.waitForLoadState("networkidle");
+      await page.waitForTimeout(1500);
+      await shot(page, "dashboard", theme, true);
+      await page.getByRole("region", { name: "Last 30 days" }).getByText("Resolution rate", { exact: true }).hover();
+      await page.waitForTimeout(600);
+      await shot(page, "dashboard-kpi-hover", theme);
+      const chart = page.locator(".recharts-surface").first();
+      const box = await chart.boundingBox();
+      if (box) {
+        await page.mouse.move(box.x + box.width * 0.7, box.y + box.height * 0.5);
+        await page.waitForTimeout(400);
+        await shot(page, "dashboard-chart-tooltip", theme);
+      }
+      await page.goto("/analytics");
+      await page.getByRole("region", { name: "Last 30 days" }).locator("[data-value]").first().waitFor({ timeout: 60_000 });
+      await page.waitForLoadState("networkidle");
+      await page.waitForTimeout(1500);
+      await shot(page, "analytics", theme, true);
+      await page.locator("[aria-label='Messages by weekday and hour']").first().scrollIntoViewIfNeeded().catch(() => {});
+      await page.getByText("When customers ask").scrollIntoViewIfNeeded();
+      await page.waitForTimeout(500);
+      await shot(page, "analytics-heatmap", theme);
+      await page.setViewportSize({ width: 390, height: 844 });
+      await page.goto("/dashboard");
+      await page.getByRole("region", { name: "Last 30 days" }).locator("[data-value]").first().waitFor({ timeout: 60_000 });
+      await page.waitForLoadState("networkidle");
+      await page.waitForTimeout(1500);
+      await shot(page, "dashboard-mobile", theme, true);
+    });
+  }
+});

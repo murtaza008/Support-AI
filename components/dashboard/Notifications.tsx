@@ -62,7 +62,7 @@ export function Notifications({ wsId }: { wsId: string }) {
             <M.Label className="text-sm font-semibold text-fg">Activity</M.Label>
             <span className="text-[12px] text-fg-muted">Last 14 days</span>
           </div>
-          <div className="max-h-[min(70vh,420px)] overflow-y-auto p-1.5 scrollbar-thin">
+          <M.Group aria-label="Recent events" className="max-h-[min(70vh,420px)] overflow-y-auto p-1.5 scrollbar-thin">
             {isLoading && <p className="px-3 py-6 text-center text-sm text-fg-muted">Loading activity…</p>}
             {!isLoading && events.length === 0 && (
               <div className="px-4 py-8 text-center">
@@ -96,7 +96,7 @@ export function Notifications({ wsId }: { wsId: string }) {
                 </M.Item>
               );
             })}
-          </div>
+          </M.Group>
         </M.Content>
       </M.Portal>
     </M.Root>

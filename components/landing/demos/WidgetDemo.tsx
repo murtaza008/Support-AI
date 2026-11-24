@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Check, Copy, MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const COLORS = ["#0e6b5d", "#ff5a36", "#3d6bff", "#16181a", "#b7791f"];
+const COLORS = ["#b3471f", "#ff5a36", "#3d6bff", "#16181a", "#0e6b5d"];
 
 /** The real embed snippet (see README "Embedding the chat widget"), live-previewed. */
 export function WidgetDemo() {

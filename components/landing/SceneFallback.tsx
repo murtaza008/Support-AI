@@ -6,7 +6,8 @@ export function SceneFallback() {
   const dots = Array.from({ length: 42 }, (_, i) => {
     const a = i * 2.39996;
     const r = 0.55 + ((i * 37) % 10) / 22;
-    return { x: 300 + Math.cos(a) * r * 230, y: 210 + Math.sin(a) * r * 150 };
+    // Rounded: server (Node) and browser trig differ in the last digits, which breaks hydration.
+    return { x: Math.round(300 + Math.cos(a) * r * 230), y: Math.round(210 + Math.sin(a) * r * 150) };
   });
   return (
     <svg viewBox="0 0 600 440" role="img" aria-label="An answer card citing two of six retrieved help-doc passages" className="h-full w-full">

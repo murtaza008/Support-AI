@@ -1,8 +1,10 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { motion } from "motion/react";
-import { X } from "lucide-react";
+import * as D from "@radix-ui/react-dialog";
+import { FileText, Globe, Type } from "lucide-react";
+import { SheetContent } from "@/components/ui/dialog";
+import { Skeleton, staggerStyle } from "@/components/ui/primitives";
 
 type DocumentDetail = {
   id: string;
@@ -16,7 +18,13 @@ type DocumentDetail = {
   chunks: { id: string; chunkIndex: number; content: string; tokenCount: number }[];
 };
 
-/** Modal showing a knowledge document's indexed chunks. Used from the Knowledge list and from citation pills. */
+const sourceIcon = { FILE: FileText, URL: Globe, TEXT: Type } as const;
+const sourceLabel = { FILE: "Uploaded file", URL: "Imported from a URL", TEXT: "Pasted text" } as const;
+
+/**
+ * Side sheet showing a document's indexed passages. Used from the Knowledge
+ * list, from citation chips in Conversations, and from the playground.
+ */
 export function DocumentViewer({
   documentId,
   fallbackName,
@@ -36,66 +44,66 @@ export function DocumentViewer({
     retry: false,
   });
 
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 bg-ink/50 backdrop-blur-sm flex items-center justify-center p-4"
-      onClick={onClose}
-    >
-      <motion.div
-        initial={{ opacity: 0, y: 20, scale: 0.98 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: 20, scale: 0.98 }}
-        transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-        className="w-full max-w-2xl max-h-[80vh] flex flex-col bg-paper rounded-xl shadow-2xl border border-line p-6"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-start justify-between gap-4">
-          <div className="min-w-0">
-            <div className="font-mono-caps text-signal">Source document</div>
-            <h2 className="mt-1 font-display text-2xl font-semibold truncate">
-              {doc?.name ?? fallbackName ?? "Document"}
-            </h2>
-            {doc && (
-              <div className="font-mono text-[11px] text-muted-foreground uppercase mt-1">
-                {doc.chunkCount} chunks · {(doc.charCount / 1000).toFixed(1)}k chars ·{" "}
-                {new Date(doc.createdAt).toLocaleDateString()}
-              </div>
-            )}
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-1 text-muted-foreground hover:text-ink"
-            aria-label="Close"
-          >
-            <X className="size-4" />
-          </button>
-        </div>
+  const Icon = doc ? sourceIcon[doc.sourceType] : FileText;
 
-        <div className="mt-5 flex-1 min-h-0 overflow-y-auto space-y-3">
-          {isLoading && (
-            <div className="p-6 font-mono-caps text-muted-foreground animate-pulse">Loading…</div>
-          )}
-          {isError && (
-            <p className="p-6 text-sm text-muted-foreground text-center">
-              This document is no longer in the knowledge base.
+  return (
+    <D.Root open onOpenChange={(o) => !o && onClose()}>
+      <SheetContent title={doc?.name ?? fallbackName ?? "Document"} side="right" className="w-[min(96vw,40rem)]">
+        <div className="border-b border-border px-5 pb-4 pr-14 pt-5">
+          <p className="eyebrow">Source document</p>
+          <h2 className="mt-1 text-[19px] font-semibold leading-snug text-fg">{doc?.name ?? fallbackName ?? "Document"}</h2>
+          {doc && (
+            <p className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12.5px] text-fg-muted">
+              <span className="inline-flex items-center gap-1">
+                <Icon aria-hidden className="size-3.5" /> {sourceLabel[doc.sourceType]}
+              </span>
+              <span aria-hidden>·</span>
+              <span className="tabular">{doc.chunkCount} passages</span>
+              <span aria-hidden>·</span>
+              <span className="tabular">{doc.charCount.toLocaleString("en-US")} characters</span>
+              <span aria-hidden>·</span>
+              <span>Added {new Date(doc.createdAt).toLocaleDateString("en-US", { dateStyle: "medium" })}</span>
             </p>
           )}
-          {doc?.chunks.map((c) => (
-            <div key={c.id} className="bg-paper-raised hairline rounded-lg p-4">
-              <div className="font-mono text-[10px] text-muted-foreground uppercase">
-                Chunk {c.chunkIndex + 1} · ~{c.tokenCount} tokens
-              </div>
-              <div className="mt-2 text-sm text-ink whitespace-pre-wrap leading-relaxed">
-                {c.content}
-              </div>
-            </div>
-          ))}
+          {doc?.sourceUrl && (
+            <a
+              href={doc.sourceUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-1 inline-block max-w-full truncate text-[12.5px] text-accent-text underline-offset-4 hover:underline"
+            >
+              {doc.sourceUrl}
+            </a>
+          )}
         </div>
-      </motion.div>
-    </motion.div>
+
+        <div className="flex-1 overflow-y-auto px-5 py-4 scrollbar-thin" tabIndex={0} aria-label="Passages">
+          {isLoading && (
+            <div className="space-y-3">
+              {Array.from({ length: 3 }, (_, i) => (
+                <Skeleton key={i} className="h-28 rounded-lg" />
+              ))}
+            </div>
+          )}
+          {isError && (
+            <p className="py-10 text-center text-sm text-fg-muted">
+              This document is no longer in the knowledge base. It may have been deleted after the answer was given.
+            </p>
+          )}
+          {doc && (
+            <ol className="stagger space-y-3">
+              {doc.chunks.map((c, i) => (
+                <li key={c.id} style={staggerStyle(i)} className="rounded-lg border border-border bg-surface-2 p-4">
+                  <p className="text-[12px] text-fg-muted">
+                    Passage {c.chunkIndex + 1} · about {c.tokenCount} tokens
+                  </p>
+                  <p className="mt-1.5 whitespace-pre-wrap text-[14px] leading-relaxed text-fg">{c.content}</p>
+                </li>
+              ))}
+            </ol>
+          )}
+        </div>
+      </SheetContent>
+    </D.Root>
   );
 }

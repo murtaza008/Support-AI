@@ -61,13 +61,13 @@ export function tileTexture() {
   const { c, ctx } = canvas(256, 166);
   ctx.fillStyle = "#ffffff"; // tinted per instance via instance colour
   ctx.fillRect(0, 0, 256, 166);
-  ctx.fillStyle = "#9aa09c";
+  ctx.fillStyle = "#7f8580";
   const widths = [0.86, 0.72, 0.9, 0.64, 0.8];
   widths.forEach((w, i) => {
     roundRect(ctx, 22, 24 + i * 26, (256 - 44) * w, 9, 4.5);
     ctx.fill();
   });
-  ctx.strokeStyle = "rgba(0,0,0,0.12)";
+  ctx.strokeStyle = "rgba(0,0,0,0.2)";
   ctx.lineWidth = 3;
   ctx.strokeRect(1.5, 1.5, 253, 163);
   return texture(c);
