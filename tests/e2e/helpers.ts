@@ -44,7 +44,13 @@ export async function expectAccessible(page: Page, label: string) {
  * Mock the playground chat stream (AI SDK UI message stream, v1) so tests never
  * call Gemini. Returns a citation header like the real route does.
  */
-export async function mockChat(page: Page, answer: string) {
+type MockCitation = { documentId: string; documentName: string; similarity: number };
+const DEFAULT_CITATIONS: MockCitation[] = [
+  { documentId: "doc-mock", documentName: "Refund policy", similarity: 0.82 },
+  { documentId: "doc-mock-2", documentName: "Billing and Plans", similarity: 0.71 },
+];
+
+export async function mockChat(page: Page, answer: string, citations: MockCitation[] = DEFAULT_CITATIONS) {
   await page.route("**/api/chat", async (route) => {
     const words = answer.split(/(?<= )/);
     const events = [
@@ -63,12 +69,7 @@ export async function mockChat(page: Page, answer: string) {
         "content-type": "text/event-stream",
         "x-vercel-ai-ui-message-stream": "v1",
         "x-conversation-id": "",
-        "x-citations": encodeURIComponent(
-          JSON.stringify([
-            { documentId: "doc-mock", documentName: "Refund policy", similarity: 0.82 },
-            { documentId: "doc-mock-2", documentName: "Billing and Plans", similarity: 0.71 },
-          ]),
-        ),
+        "x-citations": encodeURIComponent(JSON.stringify(citations)),
       },
       body,
     });

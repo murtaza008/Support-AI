@@ -3,7 +3,7 @@
 import { useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { formatDistanceToNowStrict } from "date-fns";
+import { timeAgo } from "@/lib/time";
 import { AlertTriangle, Bell, CheckCircle2, Globe, Mail, UserPlus } from "lucide-react";
 import * as M from "@radix-ui/react-dropdown-menu";
 import { q } from "@/lib/queries";
@@ -89,7 +89,7 @@ export function Notifications({ wsId }: { wsId: string }) {
                     </p>
                     {e.detail && <p className="mt-0.5 truncate text-[12.5px] text-fg-muted">{e.detail}</p>}
                     <p className="mt-0.5 text-[12px] text-fg-muted">
-                      {formatDistanceToNowStrict(new Date(e.at), { addSuffix: true })}
+                      {timeAgo(new Date(e.at))}
                     </p>
                   </div>
                   {isNew && <span aria-hidden className="mt-1.5 size-2 shrink-0 rounded-full bg-accent-text" />}

@@ -4,7 +4,7 @@ import { Suspense, useMemo, useRef, useState, type DragEvent, type FormEvent } f
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import * as D from "@radix-ui/react-dialog";
-import { formatDistanceToNowStrict } from "date-fns";
+import { timeAgo } from "@/lib/time";
 import { toast } from "sonner";
 import { AlertTriangle, BookOpen, FileText, Globe, Loader2, Plus, Search, Trash2, Type, Upload } from "lucide-react";
 import { useCurrentWorkspace } from "@/lib/hooks/use-current-workspace";
@@ -223,7 +223,7 @@ function Knowledge() {
                       <td className="px-4 py-2.5 text-right tabular text-fg">{d.chunkCount}</td>
                       <td className="px-4 py-2.5 text-right tabular text-fg-muted">{d.charCount.toLocaleString("en-US")}</td>
                       <td className="whitespace-nowrap px-4 py-2.5 text-fg-muted">
-                        {formatDistanceToNowStrict(new Date(d.createdAt), { addSuffix: true })}
+                        {timeAgo(new Date(d.createdAt))}
                       </td>
                       <td className="px-2 py-2.5 text-right">
                         <Button variant="ghost" size="icon-sm" aria-label={`Delete ${d.name}`} onClick={() => setDeleting(d)}>

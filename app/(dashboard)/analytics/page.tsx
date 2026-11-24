@@ -4,7 +4,7 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useMemo, useState } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { formatDistanceToNowStrict } from "date-fns";
+import { timeAgo } from "@/lib/time";
 import { BookOpen, MessagesSquare } from "lucide-react";
 import { useCurrentWorkspace } from "@/lib/hooks/use-current-workspace";
 import { q } from "@/lib/queries";
@@ -307,7 +307,7 @@ export default function AnalyticsPage() {
                         <span className="block text-[13.5px] text-fg">&ldquo;{g.question}&rdquo;</span>
                         <span className="mt-0.5 block text-[12px] text-fg-muted">
                           {assistants.find((a) => a.id === g.assistantId)?.name ?? "Assistant"} ·{" "}
-                          {formatDistanceToNowStrict(new Date(g.at), { addSuffix: true })}
+                          {timeAgo(new Date(g.at))}
                         </span>
                       </Link>
                     </li>

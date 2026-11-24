@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Suspense, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { formatDistanceToNowStrict } from "date-fns";
+import { timeAgo } from "@/lib/time";
 import { ArrowLeft, Bot, FileText, Globe, MessagesSquare, PlayCircle, Search, Webhook } from "lucide-react";
 import { useCurrentWorkspace } from "@/lib/hooks/use-current-workspace";
 import { q, type ConversationRow } from "@/lib/queries";
@@ -254,7 +254,7 @@ function Row({ c, active, onSelect }: { c: ConversationRow; active: boolean; onS
             <span className="flex items-center justify-between gap-2">
               <span className="truncate text-[13.5px] font-medium text-fg">{c.assistant?.name ?? "Assistant"}</span>
               <span className="shrink-0 text-[12px] text-fg-muted">
-                {formatDistanceToNowStrict(new Date(c.createdAt), { addSuffix: true })}
+                {timeAgo(new Date(c.createdAt))}
               </span>
             </span>
             <span className="mt-0.5 flex items-center gap-2 text-[12px] text-fg-muted">
@@ -271,7 +271,7 @@ function Row({ c, active, onSelect }: { c: ConversationRow; active: boolean; onS
         rows={[
           { label: "Channel", value: channelLabel[c.channel] },
           { label: "Started", value: new Date(c.createdAt).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }) },
-          { label: "Last activity", value: formatDistanceToNowStrict(new Date(c.updatedAt), { addSuffix: true }) },
+          { label: "Last activity", value: timeAgo(new Date(c.updatedAt)) },
           { label: "Status", value: c.resolved ? "Resolved" : "Not resolved" },
           { label: "Rating", value: c.rating ?? "Not rated" },
         ]}

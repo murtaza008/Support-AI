@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import * as D from "@radix-ui/react-dialog";
-import { formatDistanceToNowStrict } from "date-fns";
+import { duration, timeAgo } from "@/lib/time";
 import { toast } from "sonner";
 import { Check, Copy, Link2, Mail, Trash2, UserMinus, Users } from "lucide-react";
 import { useCurrentWorkspace } from "@/lib/hooks/use-current-workspace";
@@ -210,7 +210,7 @@ export default function TeamPage() {
                               rows={[
                                 { label: "Role", value: roleLabel[m.role] },
                                 { label: "Joined", value: new Date(m.createdAt).toLocaleDateString("en-US", { dateStyle: "medium" }) },
-                                { label: "Member for", value: formatDistanceToNowStrict(new Date(m.createdAt)) },
+                                { label: "Member for", value: duration(new Date(m.createdAt)) },
                               ]}
                             />
                           </HoverCard>
@@ -268,7 +268,7 @@ export default function TeamPage() {
                           <p className="truncate text-[14px] text-fg">{inv.email}</p>
                           <p className="text-[12.5px] text-fg-muted">
                             {roleLabel[inv.role]} ·{" "}
-                            {expired ? "Expired" : `expires ${formatDistanceToNowStrict(new Date(inv.expiresAt), { addSuffix: true })}`}
+                            {expired ? "Expired" : `expires ${timeAgo(new Date(inv.expiresAt))}`}
                           </p>
                         </div>
                         <Button variant="secondary" size="sm" onClick={() => copyLink(inv.token)} disabled={expired}>

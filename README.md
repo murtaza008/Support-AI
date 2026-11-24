@@ -9,7 +9,7 @@
 ![pgvector](https://img.shields.io/badge/Neon-Postgres%20%2B%20pgvector-00E599?style=flat-square&logo=postgresql&logoColor=white)
 ![Gemini](https://img.shields.io/badge/AI-Google%20Gemini-8E75B2?style=flat-square&logo=googlegemini&logoColor=white)
 
-**Live demo:** https://support-ai-murex.vercel.app/ — click **Try the live demo** to
+**Live demo:** https://support-ai-murex.vercel.app/ — click **Open the live demo** to
 explore a fully seeded workspace with no sign-up, or create your own account, upload a
 document, and chat with it in the playground.
 
@@ -21,10 +21,17 @@ grounded in your actual documentation and cites its sources instead of
 hallucinating. Embed it on your website with one script tag, or test it
 straight from the built-in playground.
 
+<p align="center">
+  <img src="public/screens/landing-light.png" alt="SupportAI landing page" width="49%" />
+  <img src="public/screens/dashboard-dark.png" alt="SupportAI dashboard in dark mode" width="49%" />
+</p>
+
 ## Contents
 
 - [Why this stack is fully free](#why-this-stack-is-fully-free)
 - [Features](#features)
+- [Screenshots](#screenshots)
+- [Design system](#design-system)
 - [Tech stack](#tech-stack)
 - [Getting started](#getting-started)
 - [Environment variables](#environment-variables)
@@ -33,6 +40,8 @@ straight from the built-in playground.
 - [Seeding a demo knowledge base](#seeding-a-demo-knowledge-base)
 - [How the RAG pipeline works](#how-the-rag-pipeline-works)
 - [API routes](#api-routes)
+- [Testing](#testing)
+- [Performance](#performance)
 - [Project structure](#project-structure)
 - [Deploying to Vercel](#deploying-to-vercel)
 - [Known limitations](#known-limitations)
@@ -61,23 +70,45 @@ without ever creating a Stripe account.
 
 ## Features
 
-- **Auth & workspaces** — email/password sign-up, multi-tenant workspaces with owner/admin/member roles, and a first-run wizard that creates your workspace and first assistant
-- **AI assistants** — multiple assistants per workspace, each with its own name, description, tone (friendly / professional / playful) and custom system prompt
-- **Knowledge base** — paste text, import a URL, or upload a PDF/DOCX/TXT/Markdown file; documents are chunked, embedded and indexed automatically and shared by every assistant in the workspace. Click a document to read its extracted text
-- **RAG chat playground** — streamed answers per assistant, with inline `[1]`, `[2]` citation markers that point at the retrieved snippets
-- **Embeddable widget** — a single `<script>` tag drops a floating, brand-coloured chat bubble on any website, backed by the same RAG pipeline (copy the snippet from **Assistants → Embed**)
-- **Conversation history** — every playground and widget conversation is logged with full transcripts; each answer lists the source documents it used, and clicking one opens it
-- **Analytics dashboard** — 30-day messages per day and conversations handled per assistant, with headline stats, charted with Recharts
-- **Team management** — invite teammates by shareable link, change roles, revoke invites and remove members
+- **Auth & workspaces** — email/password sign-up, multi-tenant workspaces with owner/admin/member roles, and a two-step first-run wizard (workspace, then first assistant)
+- **AI assistants** — multiple assistants per workspace, each with its own name, description, tone (friendly / professional / playful), custom instructions and widget colour, all editable from **Assistants → ⋯ → Edit settings**; owners and admins can delete them
+- **Knowledge base** — paste text, import a URL, or drag in a PDF/DOCX/TXT/Markdown file; documents are chunked, embedded and indexed automatically and shared by every assistant in the workspace. Filter by status, search, hover a name for its details, click to read its passages
+- **RAG chat playground** — streamed answers where every `[1]`, `[2]` marker is a chip: hover for the document and match strength, click to read it. A sources panel ranks the passages each answer was built from
+- **Embeddable widget** — a single `<script>` tag drops a floating, brand-coloured chat bubble on any website, backed by the same RAG pipeline (copy it from **Assistants → Embed**)
+- **Conversation history** — every playground and widget conversation with full transcripts, filters by status and channel, citation chips and the sources each answer retrieved
+- **Dashboard & analytics** — a personal overview with KPIs (vs the previous period), a needs-attention list, per-assistant performance, the most cited documents and the **questions your docs didn't answer**; analytics adds a 7/30/90-day range, channel split and a weekday × hour heatmap. Every chart has a table view
+- **Shell** — grouped sidebar with live hover cards, a command palette (Ctrl/⌘ K) for pages, assistants and documents, and notifications built from real workspace events
+- **Team management** — invite by shareable link, change roles, revoke invites, remove members or leave, with a permissions table that matches the API's checks
 - **Billing** — Starter / Pro / Agency plans with real Stripe Checkout + Customer Portal (test mode) or automatic demo-mode fallback
 - **Public demo mode** — one-click "Try demo" into a seeded, read-mostly workspace with two assistants, twelve help docs, a month of conversations and analytics; destructive actions are locked, live chat is rate limited, and a daily cron resets it
-- **Dark mode** — light / dark / system theme toggle (`next-themes`)
-- **Editorial design system** — Fraunces serif + Inter + JetBrains Mono, a paper/ink colour palette, and `motion` animations throughout, including scroll-triggered reveals that **replay every time a section re-enters view** and a type/erase cursor effect on the homepage headline
+- **Landing page** — a WebGL scroll story (React Three Fiber) of the RAG pipeline, live demos that run the real chunker, and only true numbers
+- **Light, dark and system themes** — applied before first paint, switched with a circular reveal
+
+## Screenshots
+
+| | Light | Dark |
+|---|---|---|
+| Dashboard | ![Dashboard, light](public/screens/dashboard-light.png) | ![Dashboard, dark](public/screens/dashboard-dark.png) |
+| Playground | ![Playground, light](public/screens/playground-light.png) | ![Playground, dark](public/screens/playground-dark.png) |
+| Analytics | ![Analytics, light](public/screens/analytics-light.png) | ![Analytics, dark](public/screens/analytics-dark.png) |
+| Landing (3D story) | ![Landing 3D, light](public/screens/landing-3d-light.png) | ![Landing 3D, dark](public/screens/landing-3d-dark.png) |
+
+Regenerate them with `npm run screens` (needs a production build and the demo account; see [Testing](#testing)).
+
+## Design system
+
+- **Tokens:** every colour is a CSS variable in [`app/globals.css`](app/globals.css) with a light and a dark value (warm neutral surfaces, one terracotta accent, crimson for errors). Tailwind utilities read the variables, so one class works in both themes. `npm run check:contrast` checks every text/background pair against WCAG AA.
+- **Charts:** a categorical order (terracotta, blue, plum) validated for colour-blind separation; single-series charts use the accent; every chart has a table view.
+- **Type:** Schibsted Grotesk for headings, Inter for text, JetBrains Mono for labels and code.
+- **Depth:** 1px borders, layered surfaces and small shadows, with an inset top highlight in dark mode.
+- **Components:** [`components/ui/`](components/ui) — Button (press feedback via the Web Animations API, pointer input only), HoverCard (the one hover preview used everywhere), AnimatedNumber (counts up; the final value is always in `data-value`), Dialog/Sheet, Menu, Tabs, Segmented, form controls.
+- **Motion:** page changes use React `<ViewTransition>`; lists rise in staggered (capped at 15); bars grow from their baseline; easing is expo-out, 150–450 ms; everything turns off with `prefers-reduced-motion`. The playground has no entry animations so chatting stays instant.
 
 ## Tech stack
 
 - **Framework:** Next.js 16 (App Router, Route Handlers, `proxy.ts`), React 19, TypeScript 5
-- **Styling:** Tailwind CSS v4, `motion` for animation, `next-themes` for dark mode
+- **Styling:** Tailwind CSS v4 with CSS-variable tokens, Radix primitives, `next-themes` for light/dark/system
+- **3D & motion:** three.js + React Three Fiber (landing only, lazy-loaded), Lenis (landing only), Motion's `LazyMotion` (landing only), CSS + Web Animations API in the app
 - **Database:** Neon Postgres + Prisma 7 (via the `@prisma/adapter-neon` driver adapter) + pgvector (`vector(768)` column, queried with raw SQL)
 - **Auth:** NextAuth.js v5, Credentials provider, JWT sessions, bcrypt password hashing
 - **AI:** Vercel AI SDK (`ai`, `@ai-sdk/google`, `@ai-sdk/react` `useChat`) + Google Gemini
@@ -187,6 +218,13 @@ playground.
 | `npm run build` | `next build` (does not change the database schema) |
 | `npm start` | Serve the production build |
 | `npm run lint` | ESLint |
+| `npm run typecheck` | `tsc --noEmit` (strict TypeScript) |
+| `npm test` | Vitest unit and API route tests |
+| `npm run test:e2e` | Playwright e2e + axe accessibility scans (after `npm run build`) |
+| `npm run check:contrast` | WCAG AA check of every colour-token pair, light and dark |
+| `npm run verify` | All of the above, in order |
+| `npm run bundle:report` | First-load JS per route from a running production server |
+| `npm run screens` | Regenerate the screenshots in `public/screens` |
 | `npm run seed:demo` | Create or reset the public demo workspace (see [Public demo mode](#public-demo-mode)) |
 | `npx prisma db push` | Sync `prisma/schema.prisma` (and the `vector` extension) to the database |
 
@@ -239,7 +277,7 @@ widget on a sample website.
 
 ## Public demo mode
 
-Visitors can click **Try the live demo** on the landing page or the login page and land
+Visitors can click **Open the live demo** on the landing page or the login page and land
 in a fully seeded workspace without signing up. The button posts to `/api/demo/login`,
 which signs in to the shared account `demo@supportai.demo` on the server using
 `DEMO_PASSWORD`, so the password never reaches the browser.
@@ -323,6 +361,8 @@ check workspace membership (and role where relevant).
 | `POST` | `/api/auth/signup` | Create an account |
 | `POST` | `/api/workspaces` | Create a workspace |
 | `GET` | `/api/workspaces/current` | Current workspace and role |
+| `GET` | `/api/workspaces/[id]/summary` | Counts for the shell (assistants, documents by status, conversations today / 30 days / open, members, invites) |
+| `GET` | `/api/workspaces/[id]/activity` | Real recent events for notifications (documents indexed or failed, website chats, teammates, invites) |
 | `PATCH` | `/api/workspaces/[id]` | Update workspace settings |
 | `GET` | `/api/workspaces/[id]/members` | Members |
 | `PATCH` `DELETE` | `/api/workspaces/[id]/members/[memberId]` | Change role / remove member (Owner, Admin; the owner is protected) |
@@ -338,7 +378,7 @@ check workspace membership (and role where relevant).
 | `POST` | `/api/chat` | Authenticated streaming RAG chat (playground) |
 | `GET` | `/api/conversations` | Conversations in a workspace |
 | `GET` | `/api/conversations/[id]/messages` | Messages with citations |
-| `GET` | `/api/analytics` | 30-day analytics data |
+| `GET` | `/api/analytics?days=7|30|90` | Volume, previous-period comparison, most-cited documents and uncited questions (default 30 days) |
 | `POST` | `/api/demo/login` | "Try demo": sign in to the demo account server-side |
 | `GET` | `/api/cron/demo-reset` | Daily demo reset (Vercel Cron, `CRON_SECRET`) |
 | `GET` | `/api/public/widget/embed.js` | The embeddable widget script |
@@ -346,6 +386,55 @@ check workspace membership (and role where relevant).
 | `POST` | `/api/billing/checkout` | Stripe Checkout, or instant plan switch in demo mode |
 | `POST` | `/api/billing/portal` | Stripe Customer Portal |
 | `POST` | `/api/webhooks/stripe` | Stripe webhook receiver |
+
+## Testing
+
+```bash
+npm run verify     # contrast, lint, typecheck, unit tests, build, e2e
+```
+
+- **Unit (Vitest):** analytics, activity, citation parsing, scene layouts, and the
+  `/api/analytics`, `/api/workspaces/[id]/summary` and `/api/workspaces/[id]/activity`
+  routes (sign-in, membership and workspace scoping), with Prisma mocked.
+- **E2E (Playwright):** runs against a production build. Signed-in tests use the public
+  demo account (`DEMO_PASSWORD` in `.env`) and **only read data**; dialogs are opened
+  and cancelled, never submitted, and `/api/chat` is mocked so no Gemini calls are made.
+- **Accessibility:** an axe WCAG 2.1 AA scan of every page and every dialog, menu and
+  sheet, in both light and dark themes.
+- Locally the suite uses the installed Google Chrome; in CI run
+  `npx playwright install chromium` and set `CI=1`. It runs with 2 workers and one
+  retry because every request goes to a remote database.
+
+## Performance
+
+First-load JavaScript per route (gzip), measured with `npm run bundle:report` against a
+production build, before and after the redesign:
+
+| Route | Before | After | Change |
+|---|---|---|---|
+| `/` | 255.9 kB | 272.6 kB | +16.7 kB |
+| `/login` | 248.7 kB | 228.6 kB | -20.1 kB |
+| `/signup` | 248.7 kB | 228.6 kB | -20.1 kB |
+| `404 page` | 203.2 kB | 218 kB | +14.8 kB |
+| `/dashboard` | 253.9 kB | 286.9 kB | +33 kB |
+| `/assistants` | 257.6 kB | 287.2 kB | +29.6 kB |
+| `/assistants/[id]/playground` | 373 kB | 405 kB | +32 kB |
+| `/knowledge` | 258.3 kB | 287.4 kB | +29.1 kB |
+| `/conversations` | 256.8 kB | 285.4 kB | +28.6 kB |
+| `/analytics` | 363.7 kB | 285.7 kB | -78 kB |
+| `/team` | 255.7 kB | 285 kB | +29.3 kB |
+| `/billing` | 255 kB | 282.8 kB | +27.8 kB |
+| `/settings` | 254.6 kB | 283.1 kB | +28.5 kB |
+
+The app pages carry the new shell (command palette, hover cards, menus and dialogs); analytics is smaller because charts now load lazily, and sign-in is smaller because it no longer ships the old animation library.
+
+- three.js and React Three Fiber are a separate chunk the landing page requests when the
+  browser is idle; it renders only while on screen, caps the pixel ratio at 1.5 and uses
+  one shadow pass. Without WebGL a still image is shown.
+- Recharts loads with the first chart; the command palette loads on idle or on hover of
+  the search button.
+- Every page's code is prefetched while the browser is idle after sign-in, and hovering a
+  nav item prefetches that page's data.
 
 ## Project structure
 
@@ -367,16 +456,21 @@ support-ai/
       public/widget/             # Embeddable widget script + its public chat API
       billing/, webhooks/stripe/ # Stripe checkout, portal, webhook
   components/
-    landing/                     # Nav, Footer, Typewriter, TicketCard, FeatureMock
-    dashboard/                   # Sidebar, Shell (workspace-aware layout), DocumentViewer
-    motion/                      # Reveal (replays on scroll re-entry)
-    auth/                        # Shared login/signup form
-    theme-toggle.tsx             # Light / dark / system
+    ui/                          # Design-system components (button, hover card, dialog, menu, …)
+    dashboard/                   # Shell, Sidebar, Topbar, CommandPalette, Notifications, DocumentViewer
+    data/                        # KPI tile, sparkline, bar list, heatmap, lazy trend chart
+    landing/                     # Landing sections, scroll story, demos
+      scene/                     # Lazy-loaded React Three Fiber scene (layouts, textures)
+    layout/, brand/, auth/       # Standalone-page layout, logo, sign-in form
+    theme-toggle.tsx             # Light / dark / system with circular reveal
   lib/
     rag.ts                       # Ingest, retrieve, RAG prompt, citations
     gemini.ts                    # Chat model + embeddings
     chunker.ts, parse-file.ts    # Chunking and PDF/DOCX/TXT/MD extraction
     chat.ts                      # Shared chat-route helpers (history caps, conversation ownership)
+    queries.ts                   # Shared TanStack Query definitions (also used for hover prefetch)
+    analytics.ts, analytics-view.ts # Analytics derivations (server + client), unit tested
+    activity.ts, citations.ts, plans.ts, press.ts
     demo/                        # Demo seed content, reset, rate limit
     prisma.ts, auth.ts, auth.config.ts, session.ts, workspace.ts, stripe.ts, utils.ts
     hooks/                       # TanStack Query hooks
@@ -388,6 +482,8 @@ support-ai/
     seed-knowledge-base.ts, check-seed.ts
     demo-docs/                   # Four demo help-centre documents
     test-site.html               # Mock website for testing the widget
+    check-contrast.mjs, bundle-report.mjs, screens.mjs
+  tests/unit/, tests/e2e/        # Vitest and Playwright suites
   types/next-auth.d.ts           # Session type augmentation
   proxy.ts                       # Redirects signed-out visitors (Next.js 16 "proxy")
 ```
@@ -421,9 +517,8 @@ support-ai/
 - **The public widget endpoint is only rate limited for the demo assistants.** For
   your own assistants, anyone with an assistant id can send messages, and each one
   costs a Gemini call. Add rate limiting before real production use.
-- **Similarity scores are stored but not shown.** Citations (document + similarity)
-  are saved on every answer; the Conversations page lists the source documents,
-  while the playground and widget show only the inline `[n]` markers.
+- **The widget shows only inline `[n]` markers.** The playground and Conversations
+  show each citation's document and match strength; the embeddable widget does not.
 - **Live conversations are never marked resolved.** Conversations have a `resolved`
   flag that analytics counts (the demo data sets it), but nothing in the app sets it yet.
 - **Ingestion is synchronous.** A large document is chunked and embedded inside the

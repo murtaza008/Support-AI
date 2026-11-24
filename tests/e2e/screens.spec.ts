@@ -67,16 +67,67 @@ for (const theme of themes) {
     });
 
     // Screenshots used by the landing page and README (public/screens).
+    // Two passes: SCREENS=marketing (app screens), rebuild, then SCREENS=marketing-landing.
     test("marketing", async ({ page }) => {
       test.skip(!want("marketing"));
+      test.setTimeout(240_000);
       const out = process.env.MARKETING_DIR ?? "public/screens";
       await page.setViewportSize({ width: 1360, height: 850 });
+      const ready = async () => {
+        await page.waitForLoadState("networkidle");
+        await page.waitForTimeout(1800);
+        await page.mouse.move(1355, 845);
+      };
       await page.goto("/dashboard");
-      await expect(page.getByRole("navigation", { name: "Main" })).toBeVisible();
-      await page.waitForLoadState("networkidle");
-      await page.waitForTimeout(1500);
-      await page.mouse.move(1350, 840);
+      await page.getByRole("region", { name: "Last 30 days" }).locator("[data-value]").first().waitFor({ timeout: 60_000 });
+      await ready();
       await page.screenshot({ path: path.join(out, `dashboard-${theme}.png`) });
+      await page.goto("/analytics");
+      await page.getByRole("region", { name: "Last 30 days" }).locator("[data-value]").first().waitFor({ timeout: 60_000 });
+      await ready();
+      await page.screenshot({ path: path.join(out, `analytics-${theme}.png`) });
+      const { mockChat } = await import("./helpers");
+      await mockChat(
+        page,
+        "Annual plans can be refunded in full within 30 days of purchase or renewal [1]. Cancel the plan first under Settings > Billing, then email billing from the workspace owner's address [2].",
+        // Real demo document names (the answer is mocked so no Gemini call is made).
+        [
+          { documentId: "readme-1", documentName: "Refunds and Cancellations", similarity: 0.82 },
+          { documentId: "readme-2", documentName: "Refunds and Cancellations", similarity: 0.74 },
+          { documentId: "readme-3", documentName: "Billing and Plans", similarity: 0.66 },
+        ],
+      );
+      await page.goto("/assistants/de300000-0000-4000-8000-0000000000a1/playground");
+      await page.getByRole("heading", { level: 1 }).waitFor({ timeout: 60_000 });
+      await ready();
+      const box = page.getByRole("textbox", { name: /^message/i });
+      await box.fill("Can I get a refund on my annual plan?");
+      await box.press("Enter");
+      await page.getByText(/refunded in full/).waitFor();
+      await page.waitForTimeout(600);
+      await page.mouse.move(1355, 845);
+      await page.screenshot({ path: path.join(out, `playground-${theme}.png`) });
+    });
+
+    test("marketing landing", async ({ browser }) => {
+      test.skip(!want("marketing-landing"));
+      const out = process.env.MARKETING_DIR ?? "public/screens";
+      // Signed out: a first-time visitor.
+      const ctx = await browser.newContext({
+        viewport: { width: 1360, height: 850 },
+        colorScheme: theme,
+        storageState: { cookies: [], origins: [] },
+      });
+      const page = await ctx.newPage();
+      await page.addInitScript((t) => localStorage.setItem("theme", t), theme);
+      await page.goto("/");
+      await page.waitForTimeout(2000);
+      await page.screenshot({ path: path.join(out, `landing-${theme}.png`) });
+      await page.locator("#how-it-works ol > li").nth(4).scrollIntoViewIfNeeded();
+      await page.locator("#how-it-works canvas").waitFor({ timeout: 20_000 });
+      await page.waitForTimeout(2500);
+      await page.screenshot({ path: path.join(out, `landing-3d-${theme}.png`) });
+      await ctx.close();
     });
 
     test("theme reveal", async ({ page }) => {

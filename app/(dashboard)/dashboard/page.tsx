@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 import { useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useQuery } from "@tanstack/react-query";
-import { formatDistanceToNowStrict } from "date-fns";
+import { timeAgo } from "@/lib/time";
 import { AlertTriangle, ArrowUpRight, BookOpen, Bot, Globe, MessagesSquare, PlayCircle, Upload } from "lucide-react";
 import { useCurrentWorkspace } from "@/lib/hooks/use-current-workspace";
 import { q, type ConversationRow } from "@/lib/queries";
@@ -336,7 +336,7 @@ export default function DashboardPage() {
                                 {
                                   label: "Last conversation",
                                   value: a.lastAt
-                                    ? formatDistanceToNowStrict(new Date(a.lastAt), { addSuffix: true })
+                                    ? timeAgo(new Date(a.lastAt))
                                     : "None yet",
                                 },
                               ]}
@@ -414,7 +414,7 @@ export default function DashboardPage() {
                       <span className="block text-[13.5px] text-fg">&ldquo;{g.question}&rdquo;</span>
                       <span className="mt-0.5 block text-[12px] text-fg-muted">
                         {perAssistant.find((a) => a.id === g.assistantId)?.name ?? "Assistant"} ·{" "}
-                        {formatDistanceToNowStrict(new Date(g.at), { addSuffix: true })}
+                        {timeAgo(new Date(g.at))}
                       </span>
                     </span>
                   </Link>
@@ -443,7 +443,7 @@ function OpenConversation({ c }: { c: ConversationRow }) {
           <span className="min-w-0 flex-1">
             <span className="block truncate text-[13.5px] text-fg">{c.assistant?.name ?? "Assistant"}</span>
             <span className="block text-[12px] text-fg-muted">
-              {channelLabel[c.channel]} · {formatDistanceToNowStrict(new Date(c.createdAt), { addSuffix: true })}
+              {channelLabel[c.channel]} · {timeAgo(new Date(c.createdAt))}
             </span>
           </span>
           <Badge tone="warning">Open</Badge>
@@ -455,7 +455,7 @@ function OpenConversation({ c }: { c: ConversationRow }) {
         rows={[
           { label: "Channel", value: channelLabel[c.channel] },
           { label: "Started", value: new Date(c.createdAt).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }) },
-          { label: "Last activity", value: formatDistanceToNowStrict(new Date(c.updatedAt), { addSuffix: true }) },
+          { label: "Last activity", value: timeAgo(new Date(c.updatedAt)) },
           { label: "Visitor", value: c.visitorId ? c.visitorId.slice(0, 8) : "Your team" },
           { label: "Rating", value: c.rating ?? "Not rated" },
         ]}
