@@ -398,6 +398,24 @@
   }
 }
 
+/* Headline: words rise in one after another (pure CSS, paints with the HTML). */
+@utility word-reveal {
+  & > span {
+    display: inline-block;
+    animation: rise-in 620ms var(--ease-out-expo) both;
+    animation-delay: calc(var(--w, 0) * 55ms + 60ms);
+  }
+}
+
+/* Faint grid behind the hero: depth from lines, not blobs. */
+@utility grid-backdrop {
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: linear-gradient(to bottom, black 0%, transparent 85%);
+}
+
 @utility rise {
   animation: rise-in var(--dur-slow) var(--ease-out-expo) both;
 }

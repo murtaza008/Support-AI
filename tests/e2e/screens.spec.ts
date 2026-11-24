@@ -66,6 +66,19 @@ for (const theme of themes) {
       await shot(page, "shell-mobile-nav", theme);
     });
 
+    // Screenshots used by the landing page and README (public/screens).
+    test("marketing", async ({ page }) => {
+      test.skip(!want("marketing"));
+      const out = process.env.MARKETING_DIR ?? "public/screens";
+      await page.setViewportSize({ width: 1360, height: 850 });
+      await page.goto("/dashboard");
+      await expect(page.getByRole("navigation", { name: "Main" })).toBeVisible();
+      await page.waitForLoadState("networkidle");
+      await page.waitForTimeout(1500);
+      await page.mouse.move(1350, 840);
+      await page.screenshot({ path: path.join(out, `dashboard-${theme}.png`) });
+    });
+
     test("theme reveal", async ({ page }) => {
       test.skip(!want("theme") || theme === "dark");
       await page.goto("/dashboard");
@@ -76,3 +89,50 @@ for (const theme of themes) {
     });
   });
 }
+
+test.describe("landing review", () => {
+  test.use({ storageState: { cookies: [], origins: [] } });
+  for (const theme of themes) {
+    test(`landing ${theme}`, async ({ page }) => {
+      test.skip(!want("landing"));
+      await page.setViewportSize({ width: 1440, height: 900 });
+      await page.emulateMedia({ colorScheme: theme });
+      await page.addInitScript((t) => localStorage.setItem("theme", t), theme);
+      await page.goto("/");
+      await page.waitForTimeout(250);
+      await shot(page, "landing-hero-mid", theme);
+      await page.waitForTimeout(1200);
+      await shot(page, "landing-hero", theme);
+      await expect(page.locator("#how-it-works canvas")).toHaveCount(1, { timeout: 15_000 });
+      const steps = page.locator("#how-it-works ol > li");
+      for (let i = 0; i < 5; i++) {
+        await steps.nth(i).scrollIntoViewIfNeeded();
+        await page.mouse.wheel(0, 200);
+        await page.waitForTimeout(1600);
+        await shot(page, `landing-stage-${i}`, theme);
+      }
+      // Hover a tile in the answer stage.
+      const box = await page.locator("#how-it-works canvas").boundingBox();
+      if (box) {
+        await page.mouse.move(box.x + box.width * 0.5, box.y + box.height * 0.78);
+        await page.waitForTimeout(500);
+        await shot(page, "landing-stage-hover", theme);
+      }
+      await page.locator("#features").scrollIntoViewIfNeeded();
+      await page.waitForTimeout(900);
+      await page.locator("#features").getByRole("button", { name: "1", exact: true }).hover();
+      await page.waitForTimeout(300);
+      await shot(page, "landing-features", theme);
+      await page.locator("#pricing").scrollIntoViewIfNeeded();
+      await page.waitForTimeout(900);
+      await shot(page, "landing-pricing", theme);
+      await page.setViewportSize({ width: 390, height: 844 });
+      await page.goto("/");
+      await page.waitForTimeout(1500);
+      await shot(page, "landing-mobile", theme);
+      await page.locator("#how-it-works ol > li").nth(2).scrollIntoViewIfNeeded();
+      await page.waitForTimeout(2500);
+      await shot(page, "landing-mobile-story", theme);
+    });
+  }
+});

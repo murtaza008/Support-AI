@@ -2,56 +2,51 @@
 
 import Link from "next/link";
 import { useSession } from "next-auth/react";
+import { Logo } from "@/components/brand/Logo";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { buttonVariants } from "@/components/ui/button";
+
+const links = [
+  { href: "#how-it-works", label: "How it works" },
+  { href: "#features", label: "Features" },
+  { href: "#pricing", label: "Pricing" },
+  { href: "#faq", label: "FAQ" },
+];
 
 export function Nav() {
   const { status } = useSession();
   const authed = status === "authenticated";
 
   return (
-    <header className="sticky top-0 z-50 backdrop-blur-md bg-paper/80 border-b border-line/60">
-      <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2">
-          <div className="size-7 rounded-md bg-ink flex items-center justify-center text-paper text-sm">
-            ✦
-          </div>
-          <span className="font-display text-lg font-semibold tracking-tight text-ink">
-            SupportAI
-          </span>
+    <header className="sticky top-0 z-40 border-b border-border bg-bg">
+      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
+        <Link href="/" aria-label="SupportAI home" className="rounded-md">
+          <Logo />
         </Link>
-        <nav className="hidden md:flex items-center gap-8 text-sm text-muted-foreground">
-          <a href="#features" className="hover:text-ink transition-colors">
-            Features
-          </a>
-          <a href="#pricing" className="hover:text-ink transition-colors">
-            Pricing
-          </a>
-          <a href="#faq" className="hover:text-ink transition-colors">
-            FAQ
-          </a>
+        <nav aria-label="Sections" className="hidden items-center gap-1 md:flex">
+          {links.map((l) => (
+            <a
+              key={l.href}
+              href={l.href}
+              className="rounded-md px-3 py-1.5 text-[13.5px] text-fg-muted transition-colors hover:bg-sunken hover:text-fg"
+            >
+              {l.label}
+            </a>
+          ))}
         </nav>
         <div className="flex items-center gap-2">
-          <ThemeToggle />
+          <ThemeToggle className="hidden sm:inline-flex" />
           {authed ? (
-            <Link
-              href="/dashboard"
-              className="inline-flex items-center text-sm font-medium text-paper bg-ink hover:bg-accent transition-all duration-150 px-4 py-2 rounded-md"
-            >
-              Go to dashboard
+            <Link href="/dashboard" data-press="" className={buttonVariants({ variant: "primary", size: "sm" })}>
+              Open dashboard
             </Link>
           ) : (
             <>
-              <Link
-                href="/login"
-                className="hidden sm:inline-flex text-sm text-ink hover:text-signal transition-colors px-3 py-2"
-              >
+              <Link href="/login" className={buttonVariants({ variant: "ghost", size: "sm", className: "hidden sm:inline-flex" })}>
                 Sign in
               </Link>
-              <Link
-                href="/signup"
-                className="inline-flex items-center text-sm font-medium text-paper bg-ink hover:bg-accent transition-all duration-150 px-4 py-2 rounded-md"
-              >
-                Get started free
+              <Link href="/signup" data-press="" className={buttonVariants({ variant: "primary", size: "sm" })}>
+                Start free
               </Link>
             </>
           )}

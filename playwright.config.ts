@@ -13,6 +13,7 @@ const baseURL = `http://localhost:${PORT}`;
 
 export default defineConfig({
   testDir: "tests/e2e",
+  globalSetup: "./tests/e2e/global-setup.ts",
   outputDir: "tests/e2e/.results",
   fullyParallel: true,
   workers: process.env.CI ? 2 : 4,
@@ -31,7 +32,7 @@ export default defineConfig({
     { name: "setup", testMatch: /auth\.setup\.ts/ },
     {
       name: "public",
-      testMatch: /public\.spec\.ts/,
+      testMatch: /public\.spec\.ts|landing\.spec\.ts/,
       use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 } },
     },
     {
