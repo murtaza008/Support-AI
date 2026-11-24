@@ -216,3 +216,63 @@ test.describe("playground review", () => {
     });
   }
 });
+
+test.describe("pages review", () => {
+  for (const theme of themes) {
+    test(`pages ${theme}`, async ({ page }) => {
+      test.skip(!want("pages"));
+      test.setTimeout(240_000);
+      await page.setViewportSize({ width: 1440, height: 900 });
+      await page.emulateMedia({ colorScheme: theme });
+      await page.addInitScript((t) => localStorage.setItem("theme", t), theme);
+      const settle = async () => {
+        await page.waitForLoadState("networkidle");
+        await page.waitForTimeout(900);
+      };
+      for (const p of ["assistants", "knowledge", "conversations", "team", "settings", "billing"]) {
+        await page.goto(`/${p}`);
+        await page.locator("main h1").waitFor({ timeout: 60_000 });
+        await settle();
+        await shot(page, `page-${p}`, theme);
+      }
+      await page.goto("/knowledge");
+      await settle();
+      await page.locator("tbody tr button").first().hover();
+      await page.waitForTimeout(900);
+      await shot(page, "page-knowledge-hover", theme);
+      await page.getByRole("button", { name: "Add document" }).click();
+      await page.waitForTimeout(400);
+      await shot(page, "dialog-add-document", theme);
+      await page.keyboard.press("Escape");
+      await page.goto("/assistants");
+      await settle();
+      await page.getByRole("button", { name: /^More actions/ }).first().click();
+      await page.getByRole("menuitem", { name: "Edit settings" }).click();
+      await page.waitForTimeout(1200);
+      await shot(page, "sheet-edit-assistant", theme);
+      await page.keyboard.press("Escape");
+      const convs = await (await page.request.get("/api/workspaces/current")).json();
+      const list = await (await page.request.get(`/api/conversations?workspaceId=${convs.id}`)).json();
+      await page.goto(`/conversations?c=${list[0].id}`);
+      await settle();
+      await shot(page, "page-conversations-open", theme);
+      await page.goto("/invite/not-a-real-token");
+      await settle();
+      await shot(page, "page-invite-invalid", theme);
+      await page.goto("/this-does-not-exist");
+      await settle();
+      await shot(page, "page-404", theme);
+      await page.context().clearCookies();
+      await page.goto("/login");
+      await settle();
+      await shot(page, "page-login", theme);
+      await page.goto("/signup");
+      await settle();
+      await shot(page, "page-signup", theme);
+      await page.setViewportSize({ width: 390, height: 844 });
+      await page.goto("/login");
+      await settle();
+      await shot(page, "page-login-mobile", theme);
+    });
+  }
+});

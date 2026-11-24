@@ -37,12 +37,12 @@ export default async function WidgetPreviewPage({
 
   return (
     <div className="min-h-screen bg-white text-[#1d1d1f]">
-      <div className="bg-ink text-paper text-xs">
+      <div className="bg-inverse text-inverse-fg text-xs">
         <div className="max-w-5xl mx-auto px-6 py-2 flex flex-wrap items-center justify-between gap-2">
-          <span className="font-mono-caps text-paper/70">
+          <span className="font-mono text-[11px] uppercase tracking-[0.06em] text-inverse-muted">
             SupportAI widget preview · sample website
           </span>
-          <Link href="/" className="text-paper/70 hover:text-paper">
+          <Link href="/" className="text-inverse-muted underline-offset-4 hover:text-inverse-fg hover:underline">
             ← Back to SupportAI
           </Link>
         </div>

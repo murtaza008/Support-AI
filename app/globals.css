@@ -54,29 +54,6 @@
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
 
-  /* Legacy names, mapped onto the new tokens */
-  --color-background: var(--bg);
-  --color-foreground: var(--fg);
-  --color-card: var(--surface);
-  --color-card-foreground: var(--fg);
-  --color-popover: var(--overlay);
-  --color-popover-foreground: var(--fg);
-  --color-primary: var(--accent);
-  --color-primary-foreground: var(--accent-fg);
-  --color-muted: var(--sunken);
-  --color-muted-foreground: var(--fg-muted);
-  --color-destructive: var(--danger-text);
-  --color-destructive-foreground: var(--danger-fg);
-  --color-input: var(--border-strong);
-  --color-ring: var(--focus);
-  --color-ink: var(--fg);
-  --color-paper: var(--bg);
-  --color-paper-raised: var(--surface);
-  --color-signal: var(--accent-text);
-  --color-signal-dim: var(--accent-soft);
-  --color-moss: var(--accent-text);
-  --color-moss-dim: var(--accent-soft);
-  --color-line: var(--border);
 
   --radius-sm: 0.3125rem;
   --radius-md: 0.4375rem;
@@ -269,14 +246,6 @@
 }
 
 /* Small uppercase label, used for section eyebrows and table headers. */
-@utility font-mono-caps {
-  font-family: var(--font-mono);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  font-size: 0.6875rem;
-  font-weight: 500;
-}
-
 @utility eyebrow {
   font-family: var(--font-mono);
   text-transform: uppercase;
@@ -284,10 +253,6 @@
   font-size: 0.6875rem;
   font-weight: 500;
   color: var(--fg-subtle);
-}
-
-@utility hairline {
-  border: 1px solid var(--border);
 }
 
 @utility tabular {

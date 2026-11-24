@@ -2,23 +2,32 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "motion/react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useCurrentWorkspace } from "@/lib/hooks/use-current-workspace";
+import { CenteredPage } from "@/components/layout/CenteredPage";
+import { Button } from "@/components/ui/button";
+import { Field, Input } from "@/components/ui/form";
+import { Segmented } from "@/components/ui/segmented";
+import { cn } from "@/lib/utils";
+
+type Tone = "friendly" | "professional" | "playful";
 
 export default function OnboardingPage() {
   const router = useRouter();
+  const qc = useQueryClient();
   const { data: ws, isLoading } = useCurrentWorkspace();
   const [step, setStep] = useState<1 | 2>(1);
   const [workspaceName, setWorkspaceName] = useState("");
   const [assistantName, setAssistantName] = useState("");
-  const [tone, setTone] = useState("friendly");
+  const [tone, setTone] = useState<Tone>("friendly");
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [workspaceId, setWorkspaceId] = useState<string | null>(null);
 
+  // People who already have a workspace go straight to it.
   useEffect(() => {
-    if (!isLoading && ws) router.push("/dashboard");
-  }, [isLoading, ws, router]);
+    if (!isLoading && ws && !workspaceId) router.push("/dashboard");
+  }, [isLoading, ws, workspaceId, router]);
 
   async function submitWorkspace(e: FormEvent) {
     e.preventDefault();
@@ -32,13 +41,13 @@ export default function OnboardingPage() {
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        throw new Error(body.error ?? "Could not create workspace.");
+        throw new Error(body.error ?? "Could not create the workspace.");
       }
       const workspace = await res.json();
       setWorkspaceId(workspace.id);
       setStep(2);
     } catch (e: unknown) {
-      setErr(e instanceof Error ? e.message : "Could not create workspace.");
+      setErr(e instanceof Error ? e.message : "Could not create the workspace.");
     } finally {
       setLoading(false);
     }
@@ -57,126 +66,78 @@ export default function OnboardingPage() {
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        throw new Error(body.error ?? "Could not create assistant.");
+        throw new Error(body.error ?? "Could not create the assistant.");
       }
-      router.push("/dashboard");
+      await qc.invalidateQueries({ queryKey: ["current-workspace"] });
+      router.push("/knowledge");
     } catch (e: unknown) {
-      setErr(e instanceof Error ? e.message : "Could not create assistant.");
+      setErr(e instanceof Error ? e.message : "Could not create the assistant.");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div className="min-h-screen bg-paper text-ink flex flex-col">
-      <header className="border-b border-line">
-        <div className="max-w-3xl mx-auto px-6 py-4 flex items-center gap-2">
-          <div className="size-7 rounded-md bg-ink flex items-center justify-center text-paper text-sm">
-            ✦
-          </div>
-          <span className="font-display text-lg font-semibold">SupportAI</span>
-          <div className="ml-auto font-mono-caps text-muted-foreground">
-            Step 0{step} / 02
-          </div>
-        </div>
-      </header>
+    <CenteredPage aside={<span className="text-[13px] text-fg-muted">Step {step} of 2</span>}>
+      <ol aria-label="Setup steps" className="mb-6 flex gap-2">
+        {[1, 2].map((n) => (
+          <li
+            key={n}
+            aria-current={step === n ? "step" : undefined}
+            className={cn("h-1 flex-1 rounded-full transition-colors duration-300", n <= step ? "bg-accent" : "bg-sunken")}
+          >
+            <span className="sr-only">
+              Step {n}: {n === 1 ? "Name your workspace" : "Create your first assistant"}
+              {n < step ? " (done)" : ""}
+            </span>
+          </li>
+        ))}
+      </ol>
 
-      <div className="flex-1 flex items-center justify-center px-6 py-12">
-        <motion.div
-          key={step}
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-          className="w-full max-w-lg"
-        >
-          {step === 1 ? (
-            <form onSubmit={submitWorkspace}>
-              <div className="font-mono-caps text-signal mb-3">Workspace</div>
-              <h1
-                className="font-display text-4xl md:text-5xl font-semibold leading-tight"
-                style={{ letterSpacing: "-0.02em" }}
-              >
-                Name your workspace.
-              </h1>
-              <p className="mt-3 text-muted-foreground">
-                This is where you&rsquo;ll organize assistants, docs, and teammates.
-              </p>
-              <input
-                autoFocus
-                value={workspaceName}
-                onChange={(e) => setWorkspaceName(e.target.value)}
-                placeholder="Acme Support"
-                required
-                minLength={2}
-                className="mt-8 w-full px-4 py-3 bg-paper-raised hairline rounded-md text-lg focus:border-signal focus:outline-none"
+      <div className="panel p-6 sm:p-8">
+        {step === 1 ? (
+          <form onSubmit={submitWorkspace} key="ws">
+            <h1 className="text-[24px] font-semibold leading-tight text-fg">Name your workspace</h1>
+            <p className="mt-2 text-[14.5px] text-fg-muted">
+              Usually your company or product. Teammates you invite join this workspace.
+            </p>
+            <Field label="Workspace name" htmlFor="ob-ws" className="mt-6">
+              <Input id="ob-ws" autoFocus required maxLength={80} value={workspaceName} onChange={(e) => setWorkspaceName(e.target.value)} placeholder="Acme Support" />
+            </Field>
+            {err && <p role="alert" className="mt-4 rounded-md border border-danger-text/30 bg-danger-soft px-3 py-2 text-[13px] text-danger-text">{err}</p>}
+            <Button type="submit" variant="primary" size="lg" className="mt-6 w-full" disabled={loading || !workspaceName.trim()}>
+              {loading ? "Creating…" : "Continue"}
+            </Button>
+          </form>
+        ) : (
+          <form onSubmit={submitAssistant} key="assistant">
+            <h1 className="text-[24px] font-semibold leading-tight text-fg">Create your first assistant</h1>
+            <p className="mt-2 text-[14.5px] text-fg-muted">
+              It answers customer questions from the documents you add next. You can change all of this later.
+            </p>
+            <Field label="Assistant name" htmlFor="ob-name" className="mt-6">
+              <Input id="ob-name" autoFocus required minLength={2} maxLength={80} value={assistantName} onChange={(e) => setAssistantName(e.target.value)} placeholder="Help centre assistant" />
+            </Field>
+            <div className="mt-5 space-y-1.5">
+              <span className="block text-[13px] font-medium text-fg">Tone</span>
+              <Segmented
+                label="Tone"
+                value={tone}
+                onChange={setTone}
+                options={[
+                  { value: "friendly", label: "Friendly" },
+                  { value: "professional", label: "Professional" },
+                  { value: "playful", label: "Playful" },
+                ]}
               />
-              {err && <p className="mt-3 text-sm text-destructive">{err}</p>}
-              <button
-                type="submit"
-                disabled={loading}
-                className="mt-6 inline-flex items-center gap-2 px-5 py-3 bg-accent text-white rounded-md font-medium hover:-translate-y-0.5 hover:shadow-[0_8px_24px_-8px_rgba(255,90,54,0.5)] transition-all disabled:opacity-60"
-              >
-                {loading ? "Creating…" : "Continue →"}
-              </button>
-            </form>
-          ) : (
-            <form onSubmit={submitAssistant}>
-              <div className="font-mono-caps text-signal mb-3">First assistant</div>
-              <h1
-                className="font-display text-4xl md:text-5xl font-semibold leading-tight"
-                style={{ letterSpacing: "-0.02em" }}
-              >
-                Meet your new agent.
-              </h1>
-              <p className="mt-3 text-muted-foreground">
-                We&rsquo;ll wire it up to your docs in the next step.
-              </p>
-
-              <label className="block mt-8">
-                <span className="font-mono-caps text-muted-foreground">Name</span>
-                <input
-                  autoFocus
-                  value={assistantName}
-                  onChange={(e) => setAssistantName(e.target.value)}
-                  placeholder="Support Bot"
-                  required
-                  minLength={2}
-                  className="mt-1.5 w-full px-4 py-3 bg-paper-raised hairline rounded-md focus:border-signal focus:outline-none"
-                />
-              </label>
-
-              <label className="block mt-5">
-                <span className="font-mono-caps text-muted-foreground">Tone</span>
-                <div className="mt-2 grid grid-cols-3 gap-2">
-                  {["friendly", "professional", "playful"].map((t) => (
-                    <button
-                      type="button"
-                      key={t}
-                      onClick={() => setTone(t)}
-                      className={`px-3 py-2.5 rounded-md text-sm capitalize transition-all ${
-                        tone === t
-                          ? "bg-ink text-paper"
-                          : "bg-paper-raised hairline hover:border-ink/40"
-                      }`}
-                    >
-                      {t}
-                    </button>
-                  ))}
-                </div>
-              </label>
-
-              {err && <p className="mt-3 text-sm text-destructive">{err}</p>}
-              <button
-                type="submit"
-                disabled={loading}
-                className="mt-8 inline-flex items-center gap-2 px-5 py-3 bg-accent text-white rounded-md font-medium hover:-translate-y-0.5 hover:shadow-[0_8px_24px_-8px_rgba(255,90,54,0.5)] transition-all disabled:opacity-60"
-              >
-                {loading ? "Creating…" : "Enter dashboard →"}
-              </button>
-            </form>
-          )}
-        </motion.div>
+            </div>
+            {err && <p role="alert" className="mt-4 rounded-md border border-danger-text/30 bg-danger-soft px-3 py-2 text-[13px] text-danger-text">{err}</p>}
+            <Button type="submit" variant="primary" size="lg" className="mt-6 w-full" disabled={loading || assistantName.trim().length < 2}>
+              {loading ? "Creating…" : "Create and add documents"}
+            </Button>
+          </form>
+        )}
       </div>
-    </div>
+    </CenteredPage>
   );
 }

@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { motion } from "motion/react";
-import { useState } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Users } from "lucide-react";
+import { CenteredPage } from "@/components/layout/CenteredPage";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/primitives";
 
 type InviteInfo = {
   email: string;
@@ -29,13 +31,14 @@ export default function InvitePage() {
       if (!res.ok) throw new Error("Invite not found");
       return res.json();
     },
+    retry: false,
   });
 
   const accept = useMutation({
     mutationFn: async () => {
       const res = await fetch(`/api/invites/${token}`, { method: "POST" });
-      const body = await res.json();
-      if (!res.ok) throw new Error(body.error ?? "Could not accept invite");
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body.error ?? "Could not accept the invite");
       return body;
     },
     onSuccess: () => router.push("/dashboard"),
@@ -48,94 +51,60 @@ export default function InvitePage() {
   }
 
   return (
-    <div className="min-h-screen bg-paper text-ink flex items-center justify-center px-6">
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-        className="w-full max-w-md bg-paper-raised hairline rounded-xl p-8 text-center"
-      >
-        <div className="mx-auto size-12 rounded-full bg-signal-dim text-signal flex items-center justify-center">
-          <Users className="size-5" />
+    <CenteredPage>
+      <div className="panel p-6 text-center sm:p-8">
+        <div className="mx-auto flex size-11 items-center justify-center rounded-lg bg-accent-soft text-accent-text">
+          <Users aria-hidden className="size-5" />
         </div>
 
         {isLoading && (
-          <p className="mt-5 font-mono-caps text-muted-foreground animate-pulse">
-            Loading invite…
-          </p>
+          <div className="mt-5 space-y-3">
+            <Skeleton className="mx-auto h-7 w-56" />
+            <Skeleton className="mx-auto h-4 w-40" />
+          </div>
         )}
 
         {!isLoading && !invite && (
           <>
-            <h1 className="mt-5 font-display text-2xl font-semibold">Invite not found.</h1>
-            <p className="mt-2 text-muted-foreground">
-              This link may have been revoked or never existed.
-            </p>
+            <h1 className="mt-5 text-[22px] font-semibold text-fg">This invite link doesn&rsquo;t work</h1>
+            <p className="mt-2 text-[14px] text-fg-muted">It may have been revoked, or the link is incomplete. Ask whoever sent it for a new one.</p>
+            <Link href="/" className={buttonVariants({ variant: "secondary", className: "mt-6" })}>
+              Go to SupportAI
+            </Link>
           </>
         )}
 
         {!isLoading && invite && (invite.accepted || invite.expired) && (
           <>
-            <h1 className="mt-5 font-display text-2xl font-semibold">
-              {invite.accepted ? "Already used." : "Invite expired."}
-            </h1>
-            <p className="mt-2 text-muted-foreground">
-              Ask an admin at {invite.workspaceName} to send a new invite link.
-            </p>
+            <h1 className="mt-5 text-[22px] font-semibold text-fg">{invite.accepted ? "This invite was already used" : "This invite has expired"}</h1>
+            <p className="mt-2 text-[14px] text-fg-muted">Ask an admin at {invite.workspaceName} to send you a new link.</p>
           </>
         )}
 
         {!isLoading && invite && !invite.accepted && !invite.expired && (
           <>
-            <div className="mt-5 font-mono-caps text-signal">You&rsquo;re invited</div>
-            <h1
-              className="mt-2 font-display text-3xl font-semibold"
-              style={{ letterSpacing: "-0.02em" }}
-            >
-              Join {invite.workspaceName}
-            </h1>
-            <p className="mt-2 text-muted-foreground">
-              As {invite.role.toLowerCase()} · {invite.email}
+            <h1 className="mt-5 text-[22px] font-semibold text-fg">Join {invite.workspaceName}</h1>
+            <p className="mt-2 text-[14px] text-fg-muted">
+              You&rsquo;re invited as {invite.role.toLowerCase()} ({invite.email}).
             </p>
-
-            {err && <p className="mt-4 text-sm text-destructive">{err}</p>}
-
+            {err && <p role="alert" className="mt-4 rounded-md border border-danger-text/30 bg-danger-soft px-3 py-2 text-[13px] text-danger-text">{err}</p>}
             {status === "authenticated" ? (
-              <button
-                onClick={() => accept.mutate()}
-                disabled={accept.isPending}
-                className="mt-6 w-full inline-flex items-center justify-center gap-2 px-5 py-3 bg-accent text-white rounded-md font-medium hover:bg-[#e84a26] transition-colors disabled:opacity-60"
-              >
-                {accept.isPending
-                  ? "Joining…"
-                  : `Accept as ${session?.user?.email ?? "you"} →`}
-              </button>
+              <Button variant="primary" size="lg" className="mt-6 w-full" onClick={() => accept.mutate()} disabled={accept.isPending}>
+                {accept.isPending ? "Joining…" : `Join as ${session?.user?.email ?? "you"}`}
+              </Button>
             ) : (
-              <div className="mt-6 flex flex-col gap-2">
-                <button
-                  onClick={() => goAuth("signup")}
-                  className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 bg-accent text-white rounded-md font-medium hover:bg-[#e84a26] transition-colors"
-                >
-                  Create an account →
-                </button>
-                <button
-                  onClick={() => goAuth("login")}
-                  className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 text-ink hairline rounded-md font-medium hover:bg-paper transition-colors"
-                >
-                  Sign in
-                </button>
+              <div className="mt-6 grid gap-2">
+                <Button variant="primary" size="lg" onClick={() => goAuth("signup")} disabled={status === "loading"}>
+                  Create an account to join
+                </Button>
+                <Button variant="secondary" size="lg" onClick={() => goAuth("login")} disabled={status === "loading"}>
+                  I already have an account
+                </Button>
               </div>
             )}
           </>
         )}
-
-        <Link
-          href="/"
-          className="mt-6 inline-block text-sm text-muted-foreground hover:text-ink"
-        >
-          ← Back to SupportAI
-        </Link>
-      </motion.div>
-    </div>
+      </div>
+    </CenteredPage>
   );
 }

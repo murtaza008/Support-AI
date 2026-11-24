@@ -1,139 +1,156 @@
 "use client";
 
+import Link from "next/link";
+import { useState, type FormEvent } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
-import { toast } from "sonner";
-import { useCurrentWorkspace } from "@/lib/hooks/use-current-workspace";
 import { useSession } from "next-auth/react";
-import { Reveal } from "@/components/motion/Reveal";
+import { toast } from "sonner";
+import { Lock } from "lucide-react";
+import { useCurrentWorkspace } from "@/lib/hooks/use-current-workspace";
+import { Button } from "@/components/ui/button";
+import { Field, Input } from "@/components/ui/form";
+import { HoverStats } from "@/components/ui/hover-card";
+import { PageHeader, Panel, PanelHeader, Skeleton } from "@/components/ui/primitives";
 
-const PRESETS = ["#FF5A36", "#13151A", "#7A9E7E", "#3D6BFF", "#8B5CF6", "#EAB308"];
+const PRESETS = ["#b3471f", "#ff5a36", "#3d6bff", "#0e6b5d", "#7c3aed", "#16181a"];
+const HEX = /^#[0-9a-fA-F]{6}$/;
+const planLabel = { STARTER: "Starter", PRO: "Pro", AGENCY: "Agency" } as const;
+const roleLabel = { OWNER: "Owner", ADMIN: "Admin", MEMBER: "Member" } as const;
 
 export default function SettingsPage() {
   const qc = useQueryClient();
   const { data: ws } = useCurrentWorkspace();
   const { data: session } = useSession();
-
-  // Derived from `ws` on every render (no effect needed) until the user
-  // edits a field, at which point the local draft takes over.
-  const [draft, setDraft] = useState<{ name: string; color: string } | null>(null);
-  const name = draft?.name ?? ws?.name ?? "";
-  const color = draft?.color ?? ws?.brandColor ?? "#FF5A36";
-  const setName = (v: string) => setDraft({ name: v, color });
-  const setColor = (v: string) => setDraft({ name, color: v });
-
   const canManage = ws?.role === "OWNER" || ws?.role === "ADMIN";
 
-  const saveWs = useMutation({
+  // The form shows the saved values until the user edits a field.
+  const [draft, setDraft] = useState<{ name: string; color: string } | null>(null);
+  const name = draft?.name ?? ws?.name ?? "";
+  const color = draft?.color ?? ws?.brandColor ?? "#b3471f";
+  const set = (patch: Partial<{ name: string; color: string }>) => setDraft({ name, color, ...patch });
+  const valid = name.trim().length > 0 && HEX.test(color);
+
+  const save = useMutation({
     mutationFn: async () => {
-      if (!ws) return;
-      const res = await fetch(`/api/workspaces/${ws.id}`, {
+      const res = await fetch(`/api/workspaces/${ws!.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, brandColor: color }),
+        body: JSON.stringify({ name: name.trim(), brandColor: color }),
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        throw new Error(body.error ?? "Could not save workspace");
+        throw new Error((body as { error?: string }).error ?? "Could not save the workspace");
       }
     },
     onSuccess: () => {
       toast.success("Workspace saved");
+      setDraft(null);
       qc.invalidateQueries({ queryKey: ["current-workspace"] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
 
   return (
-    <div className="max-w-4xl mx-auto px-8 py-10">
-      <Reveal>
-        <div className="font-mono-caps text-signal">Settings</div>
-        <h1
-          className="mt-2 font-display text-4xl md:text-5xl font-semibold"
-          style={{ letterSpacing: "-0.02em" }}
-        >
-          Workspace &amp; profile.
-        </h1>
-      </Reveal>
+    <div className="mx-auto max-w-4xl px-4 py-8 sm:px-8">
+      <PageHeader eyebrow="Settings" title="Workspace settings" description="The workspace name and colour, and your account." />
 
-      <Reveal delay={0.05} className="mt-10 bg-paper-raised hairline rounded-lg p-6">
-        <div className="font-mono-caps text-muted-foreground">Workspace</div>
-        <h2 className="mt-1 font-display text-2xl font-semibold">Details</h2>
-        <div className="mt-6 grid gap-5">
-          <div>
-            <label className="font-mono-caps text-muted-foreground">Name</label>
-            <input
-              aria-label="Workspace name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              disabled={!canManage}
-              className="mt-1.5 w-full h-10 px-3 rounded-md hairline bg-paper focus:border-signal focus:outline-none text-sm disabled:opacity-60"
-            />
-          </div>
-          <div>
-            <label className="font-mono-caps text-muted-foreground">Brand color</label>
-            <div className="mt-2 flex items-center gap-2 flex-wrap">
-              {PRESETS.map((c) => (
-                <button
-                  key={c}
-                  type="button"
-                  onClick={() => canManage && setColor(c)}
-                  disabled={!canManage}
-                  className={`size-9 rounded-full transition-transform ${color === c ? "ring-2 ring-offset-2 ring-ink scale-105" : "hover:scale-105"}`}
-                  style={{ background: c }}
-                  aria-label={c}
+      <Panel className="mt-8">
+        <PanelHeader
+          title="Workspace"
+          description={canManage ? "Owners and admins can change these." : undefined}
+        />
+        {!ws ? (
+          <Skeleton className="m-5 h-40" />
+        ) : (
+          <form
+            onSubmit={(e: FormEvent) => {
+              e.preventDefault();
+              if (valid) save.mutate();
+            }}
+            className="space-y-5 px-5 pb-5 pt-4"
+          >
+            {!canManage && (
+              <p className="flex items-center gap-2 rounded-md border border-border bg-surface-2 px-3 py-2 text-[13px] text-fg-muted">
+                <Lock aria-hidden className="size-4" /> Only owners and admins can change workspace settings. You&rsquo;re a {roleLabel[ws.role].toLowerCase()}.
+              </p>
+            )}
+            <Field label="Workspace name" htmlFor="ws-name">
+              <Input id="ws-name" value={name} onChange={(e) => set({ name: e.target.value })} disabled={!canManage} maxLength={80} required />
+            </Field>
+
+            <fieldset disabled={!canManage}>
+              <legend className="text-[13px] font-medium text-fg">Brand colour</legend>
+              <p className="mt-0.5 text-[12.5px] text-fg-muted">Marks the workspace in the sidebar. Each assistant&rsquo;s widget has its own colour.</p>
+              <div className="mt-3 flex flex-wrap items-center gap-2.5">
+                {PRESETS.map((c) => (
+                  <label key={c} className="cursor-pointer">
+                    <input type="radio" name="ws-color" className="peer sr-only" checked={color.toLowerCase() === c} onChange={() => set({ color: c })} />
+                    <span className="sr-only">{c}</span>
+                    <span
+                      aria-hidden
+                      className="block size-8 rounded-full border border-border-strong ring-offset-2 ring-offset-surface peer-checked:ring-2 peer-checked:ring-fg peer-focus-visible:ring-2 peer-focus-visible:ring-focus"
+                      style={{ background: c }}
+                    />
+                  </label>
+                ))}
+                <Input
+                  aria-label="Hex colour"
+                  aria-invalid={!HEX.test(color)}
+                  value={color}
+                  onChange={(e) => set({ color: e.target.value })}
+                  className="h-8 w-28 font-mono text-[12.5px]"
                 />
-              ))}
-              <input
-                type="color"
-                aria-label="Custom brand colour"
-                value={color}
-                onChange={(e) => setColor(e.target.value)}
-                disabled={!canManage}
-                className="size-9 rounded-full overflow-hidden cursor-pointer"
-              />
-              <span className="font-mono text-xs text-muted-foreground ml-2">{color}</span>
-            </div>
-          </div>
-          <div>
-            <label className="font-mono-caps text-muted-foreground">Plan</label>
-            <div className="mt-1.5 flex items-center gap-2">
-              <span className="px-2.5 py-1 rounded-full bg-moss-dim text-moss font-mono text-xs uppercase">
-                {ws?.plan?.toLowerCase() ?? "starter"}
-              </span>
-              <a href="/billing" className="text-xs text-signal hover:underline">
-                Manage billing →
-              </a>
-            </div>
-          </div>
-          {canManage && (
-            <div className="pt-2">
-              <button
-                onClick={() => saveWs.mutate()}
-                disabled={saveWs.isPending}
-                className="px-4 py-2 bg-ink text-paper rounded-md text-sm hover:bg-accent transition-colors disabled:opacity-60"
-              >
-                {saveWs.isPending ? "Saving…" : "Save workspace"}
-              </button>
-            </div>
-          )}
-        </div>
-      </Reveal>
+                <input
+                  type="color"
+                  aria-label="Pick a custom colour"
+                  value={HEX.test(color) ? color : "#b3471f"}
+                  onChange={(e) => set({ color: e.target.value })}
+                  className="size-8 cursor-pointer rounded-md border border-border bg-transparent"
+                />
+              </div>
+              {!HEX.test(color) && <p className="mt-2 text-[12.5px] text-danger-text">Use a hex colour like #b3471f.</p>}
+            </fieldset>
 
-      <Reveal delay={0.1} className="mt-6 bg-paper-raised hairline rounded-lg p-6">
-        <div className="font-mono-caps text-muted-foreground">Profile</div>
-        <h2 className="mt-1 font-display text-2xl font-semibold">You</h2>
-        <div className="mt-6 grid gap-5">
-          <div>
-            <label className="font-mono-caps text-muted-foreground">Name</label>
-            <div className="mt-1.5 text-ink">{session?.user?.name ?? "—"}</div>
-          </div>
-          <div>
-            <label className="font-mono-caps text-muted-foreground">Email</label>
-            <div className="mt-1.5 text-ink">{session?.user?.email ?? "—"}</div>
-          </div>
+            <div className="flex items-center gap-3 rounded-lg border border-border bg-surface-2 p-3">
+              <span aria-hidden className="size-8 rounded-md border border-black/10" style={{ background: HEX.test(color) ? color : "transparent" }} />
+              <div className="min-w-0">
+                <p className="truncate text-[13.5px] font-medium text-fg">{name || "Workspace"}</p>
+                <p className="text-[12px] text-fg-muted">
+                  {planLabel[ws.plan]} plan ·{" "}
+                  <Link href="/billing" className="text-accent-text underline underline-offset-4">
+                    Billing
+                  </Link>
+                </p>
+              </div>
+              <span className="ml-auto text-[12px] text-fg-muted">Preview</span>
+            </div>
+
+            {canManage && (
+              <div className="flex justify-end gap-2">
+                <Button variant="secondary" onClick={() => setDraft(null)} disabled={!draft || save.isPending}>
+                  Discard
+                </Button>
+                <Button type="submit" variant="primary" disabled={!draft || !valid || save.isPending}>
+                  {save.isPending ? "Saving…" : "Save changes"}
+                </Button>
+              </div>
+            )}
+          </form>
+        )}
+      </Panel>
+
+      <Panel className="mt-4">
+        <PanelHeader title="Your account" />
+        <div className="px-5 pb-5 pt-1">
+          <HoverStats
+            rows={[
+              { label: "Name", value: session?.user?.name ?? "Not set" },
+              { label: "Email", value: session?.user?.email ?? "—" },
+              { label: "Role in this workspace", value: ws ? roleLabel[ws.role] : "—" },
+            ]}
+          />
         </div>
-      </Reveal>
+      </Panel>
     </div>
   );
 }

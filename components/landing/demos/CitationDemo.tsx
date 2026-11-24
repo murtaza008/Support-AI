@@ -38,7 +38,6 @@ function Cite({ n, active, setActive }: { n: number; active: number | null; setA
 export function CitationDemo() {
   const [active, setActive] = useState<number | null>(null);
 
-
   return (
     <div className="flex h-full flex-col gap-3">
       <div className="ml-auto max-w-[85%] rounded-xl rounded-br-sm bg-inverse px-3 py-2 text-[13.5px] text-inverse-fg">
@@ -46,8 +45,13 @@ export function CitationDemo() {
       </div>
       <div className="max-w-[92%] rounded-xl rounded-bl-sm border border-border bg-surface-2 px-3 py-2 text-[13.5px] leading-relaxed text-fg">
         Yes. Annual plans can be refunded in full within 30 days of purchase or renewal
-        <Cite n={0} active={active} setActive={setActive} />. Cancel the plan first, then email billing from the workspace owner&rsquo;s address
-        <Cite n={1} active={active} setActive={setActive} />.
+        <span className="whitespace-nowrap">
+          <Cite n={0} active={active} setActive={setActive} />.
+        </span>{" "}
+        Cancel the plan first, then email billing from the workspace owner&rsquo;s address
+        <span className="whitespace-nowrap">
+          <Cite n={1} active={active} setActive={setActive} />.
+        </span>
       </div>
       <ol className="mt-auto space-y-1.5">
         {SOURCES.map((s, i) => (
