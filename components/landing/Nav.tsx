@@ -35,7 +35,7 @@ export function Nav() {
           {authed ? (
             <Link
               href="/dashboard"
-              className="inline-flex items-center text-sm font-medium text-paper bg-ink hover:bg-signal transition-all duration-150 px-4 py-2 rounded-md"
+              className="inline-flex items-center text-sm font-medium text-paper bg-ink hover:bg-accent transition-all duration-150 px-4 py-2 rounded-md"
             >
               Go to dashboard
             </Link>
@@ -49,7 +49,7 @@ export function Nav() {
               </Link>
               <Link
                 href="/signup"
-                className="inline-flex items-center text-sm font-medium text-paper bg-ink hover:bg-signal transition-all duration-150 px-4 py-2 rounded-md"
+                className="inline-flex items-center text-sm font-medium text-paper bg-ink hover:bg-accent transition-all duration-150 px-4 py-2 rounded-md"
               >
                 Get started free
               </Link>

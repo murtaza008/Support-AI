@@ -104,7 +104,7 @@ export default function InvitePage() {
               <button
                 onClick={() => accept.mutate()}
                 disabled={accept.isPending}
-                className="mt-6 w-full inline-flex items-center justify-center gap-2 px-5 py-3 bg-signal text-white rounded-md font-medium hover:bg-[#e84a26] transition-colors disabled:opacity-60"
+                className="mt-6 w-full inline-flex items-center justify-center gap-2 px-5 py-3 bg-accent text-white rounded-md font-medium hover:bg-[#e84a26] transition-colors disabled:opacity-60"
               >
                 {accept.isPending
                   ? "Joining…"
@@ -114,7 +114,7 @@ export default function InvitePage() {
               <div className="mt-6 flex flex-col gap-2">
                 <button
                   onClick={() => goAuth("signup")}
-                  className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 bg-signal text-white rounded-md font-medium hover:bg-[#e84a26] transition-colors"
+                  className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 bg-accent text-white rounded-md font-medium hover:bg-[#e84a26] transition-colors"
                 >
                   Create an account →
                 </button>

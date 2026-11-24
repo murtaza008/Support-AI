@@ -155,6 +155,7 @@ export default function TeamPage() {
               <input
                 type="email"
                 required
+                aria-label="Teammate email"
                 placeholder="teammate@company.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -162,6 +163,7 @@ export default function TeamPage() {
               />
             </div>
             <select
+              aria-label="Role for the invite"
               value={role}
               onChange={(e) => setRole(e.target.value as "ADMIN" | "MEMBER")}
               className="h-10 px-3 rounded-md hairline bg-paper text-sm"
@@ -172,7 +174,7 @@ export default function TeamPage() {
             <button
               type="submit"
               disabled={createInvite.isPending}
-              className="px-4 h-10 bg-ink text-paper rounded-md text-sm hover:bg-signal transition-colors disabled:opacity-60"
+              className="px-4 h-10 bg-ink text-paper rounded-md text-sm hover:bg-accent transition-colors disabled:opacity-60"
             >
               {createInvite.isPending ? "Creating…" : "Create invite link"}
             </button>
@@ -209,6 +211,7 @@ export default function TeamPage() {
               <div className="flex items-center gap-2">
                 {canManage && m.role !== "OWNER" ? (
                   <select
+                    aria-label={`Role for ${m.user.displayName ?? m.user.email}`}
                     value={m.role}
                     onChange={(e) =>
                       updateRole.mutate({ id: m.id, r: e.target.value as "ADMIN" | "MEMBER" })

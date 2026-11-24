@@ -63,6 +63,7 @@ export default function SettingsPage() {
           <div>
             <label className="font-mono-caps text-muted-foreground">Name</label>
             <input
+              aria-label="Workspace name"
               value={name}
               onChange={(e) => setName(e.target.value)}
               disabled={!canManage}
@@ -85,6 +86,7 @@ export default function SettingsPage() {
               ))}
               <input
                 type="color"
+                aria-label="Custom brand colour"
                 value={color}
                 onChange={(e) => setColor(e.target.value)}
                 disabled={!canManage}
@@ -109,7 +111,7 @@ export default function SettingsPage() {
               <button
                 onClick={() => saveWs.mutate()}
                 disabled={saveWs.isPending}
-                className="px-4 py-2 bg-ink text-paper rounded-md text-sm hover:bg-signal transition-colors disabled:opacity-60"
+                className="px-4 py-2 bg-ink text-paper rounded-md text-sm hover:bg-accent transition-colors disabled:opacity-60"
               >
                 {saveWs.isPending ? "Saving…" : "Save workspace"}
               </button>

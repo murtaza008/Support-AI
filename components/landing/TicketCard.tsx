@@ -128,7 +128,7 @@ export function TicketCard() {
               transition={{ duration: 0.25 }}
             >
               <div className="flex items-center gap-2 mb-2">
-                <div className="size-6 rounded-full bg-signal text-white flex items-center justify-center text-[11px]">
+                <div className="size-6 rounded-full bg-accent text-white flex items-center justify-center text-[11px]">
                   ✦
                 </div>
                 <span className="text-sm font-medium text-ink">SupportAI</span>

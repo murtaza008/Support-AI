@@ -116,7 +116,7 @@ export default function DashboardPage() {
               <p className="text-muted-foreground">No assistants yet.</p>
               <Link
                 href="/assistants"
-                className="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-ink text-paper rounded-md text-sm hover:bg-signal transition-colors"
+                className="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-ink text-paper rounded-md text-sm hover:bg-accent transition-colors"
               >
                 Create your first assistant →
               </Link>

@@ -21,10 +21,8 @@ export default function Landing() {
     <div className="min-h-screen bg-paper text-ink">
       <Nav />
       <Hero />
-      <LogoStrip />
       <Features />
       <Pricing />
-      <Testimonials />
       <FAQ />
       <CTA />
       <Footer />
@@ -77,7 +75,7 @@ function Hero() {
             >
               <Link
                 href="/signup"
-                className="group inline-flex items-center gap-2 px-5 py-3 bg-signal text-white rounded-md font-medium hover:bg-[#e84a26] hover:-translate-y-0.5 hover:shadow-[0_8px_24px_-8px_rgba(255,90,54,0.5)] transition-all duration-150"
+                className="group inline-flex items-center gap-2 px-5 py-3 bg-accent text-white rounded-md font-medium hover:bg-[#e84a26] hover:-translate-y-0.5 hover:shadow-[0_8px_24px_-8px_rgba(255,90,54,0.5)] transition-all duration-150"
               >
                 Start free trial
                 <span className="transition-transform group-hover:translate-x-0.5">→</span>
@@ -104,32 +102,6 @@ function Hero() {
         </div>
       </div>
     </section>
-  );
-}
-
-function LogoStrip() {
-  const logos = ["Northwind", "Hyperion", "Lumina", "Verdant", "Quill", "Strand"];
-  return (
-    <Reveal>
-      <section className="border-y border-line bg-paper-raised/40">
-        <div className="max-w-6xl mx-auto px-6 py-8">
-          <p className="font-mono-caps text-muted-foreground text-center mb-5">
-            Trusted by support teams at
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-3">
-            {logos.map((l) => (
-              <span
-                key={l}
-                className="font-display text-xl text-ink/40 hover:text-ink/70 transition-colors"
-                style={{ letterSpacing: "-0.01em" }}
-              >
-                {l}
-              </span>
-            ))}
-          </div>
-        </div>
-      </section>
-    </Reveal>
   );
 }
 
@@ -314,69 +286,13 @@ function PlanCard({ plan }: { plan: (typeof plans)[number] }) {
         href="/signup"
         className={`mt-8 w-full inline-flex items-center justify-center px-4 py-2.5 rounded-md font-medium transition-colors duration-150 ${
           plan.highlight
-            ? "bg-signal text-white hover:bg-[#e84a26]"
-            : "bg-ink text-paper hover:bg-signal"
+            ? "bg-accent text-white hover:bg-[#e84a26]"
+            : "bg-ink text-paper hover:bg-accent"
         }`}
       >
         {plan.price === 0 ? "Get started free" : "Start free trial"}
       </Link>
     </div>
-  );
-}
-
-const testimonials = [
-  {
-    quote:
-      "We shut down our $400/mo helpdesk subscription the day SupportAI hit 78% resolution. Customers can't tell the difference, except it's faster.",
-    name: "Priya Shah",
-    role: "Head of Support, Northwind",
-  },
-  {
-    quote:
-      "Set up in an afternoon. The citations are what sold our legal team — every answer points to the exact paragraph in our docs.",
-    name: "Marcus Reid",
-    role: "Operations, Hyperion",
-  },
-  {
-    quote:
-      "I run support for 12 e-commerce clients. SupportAI handles tier-1 questions across all of them. My evenings are mine again.",
-    name: "Sasha Okafor",
-    role: "Founder, Verdant CX",
-  },
-];
-
-function Testimonials() {
-  return (
-    <section className="py-24 md:py-32">
-      <div className="max-w-6xl mx-auto px-6">
-        <Reveal>
-          <div className="font-mono-caps text-signal mb-4">From the field</div>
-          <h2
-            className="font-display text-[40px] md:text-5xl leading-[1.1] font-semibold text-ink max-w-3xl"
-            style={{ letterSpacing: "-0.015em" }}
-          >
-            Support teams that stopped firefighting.
-          </h2>
-        </Reveal>
-        <div className="mt-14 grid md:grid-cols-3 gap-5">
-          {testimonials.map((t, i) => (
-            <Reveal key={t.name} delay={i * 0.06}>
-              <figure className="h-full bg-paper-raised hairline rounded-lg p-7 flex flex-col">
-                <blockquote className="font-display text-lg leading-relaxed text-ink flex-1">
-                  &ldquo;{t.quote}&rdquo;
-                </blockquote>
-                <figcaption className="mt-6 pt-5 border-t border-line">
-                  <div className="text-sm font-medium text-ink">{t.name}</div>
-                  <div className="font-mono text-[11px] text-muted-foreground mt-0.5">
-                    {t.role}
-                  </div>
-                </figcaption>
-              </figure>
-            </Reveal>
-          ))}
-        </div>
-      </div>
-    </section>
   );
 }
 
@@ -490,7 +406,7 @@ function CTA() {
               <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
                 <Link
                   href="/signup"
-                  className="inline-flex items-center gap-2 bg-signal text-white px-6 py-3 rounded-md font-medium hover:-translate-y-0.5 transition-all"
+                  className="inline-flex items-center gap-2 bg-accent text-white px-6 py-3 rounded-md font-medium hover:-translate-y-0.5 transition-all"
                 >
                   Start free trial →
                 </Link>

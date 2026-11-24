@@ -1,33 +1,45 @@
-import type { Metadata } from "next";
-import { Fraunces, Inter, JetBrains_Mono } from "next/font/google";
+import type { Metadata, Viewport } from "next";
+import { Inter, JetBrains_Mono, Schibsted_Grotesk } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 
-const fraunces = Fraunces({
-  variable: "--font-fraunces",
+const schibsted = Schibsted_Grotesk({
+  variable: "--font-schibsted",
   subsets: ["latin"],
-  axes: ["opsz", "SOFT", "WONK"],
+  display: "swap",
 });
 
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
+  display: "swap",
 });
 
 const jetbrainsMono = JetBrains_Mono({
   variable: "--font-jetbrains-mono",
   subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "SupportAI — Turn your docs into a 24/7 support agent",
-  description:
-    "SupportAI reads your help docs and answers customer questions instantly, with citations. Set up in minutes, embed anywhere.",
-  openGraph: {
-    title: "SupportAI — Support, resolved instantly",
-    description:
-      "RAG-powered AI support agents trained on your knowledge base. Answers in seconds, with sources.",
+  title: {
+    default: "SupportAI — Answers from your help docs, with sources",
+    template: "%s · SupportAI",
   },
+  description:
+    "SupportAI turns your help docs into a support assistant that answers customer questions and cites the page it used. Embed it on your site with one script tag.",
+  openGraph: {
+    title: "SupportAI — Answers from your help docs, with sources",
+    description:
+      "Upload your help docs. SupportAI answers customer questions from them and shows which document each answer came from.",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f3f3ef" },
+    { media: "(prefers-color-scheme: dark)", color: "#0f1112" },
+  ],
 };
 
 export default function RootLayout({
@@ -40,14 +52,11 @@ export default function RootLayout({
       lang="en"
       data-scroll-behavior="smooth"
       suppressHydrationWarning
-      className={`${fraunces.variable} ${inter.variable} ${jetbrainsMono.variable} h-full antialiased`}
+      className={`${schibsted.variable} ${inter.variable} ${jetbrainsMono.variable} h-full`}
     >
-      {/* suppressHydrationWarning: browser extensions (Grammarly, dark-reader, etc.)
-          inject attributes onto <body> before hydration; this is expected and harmless. */}
-      <body
-        className="min-h-full flex flex-col bg-paper text-ink"
-        suppressHydrationWarning
-      >
+      {/* suppressHydrationWarning: next-themes sets the theme class before first paint, and
+          browser extensions inject attributes onto <body>; both are expected. */}
+      <body className="min-h-full bg-bg text-fg" suppressHydrationWarning>
         <Providers>{children}</Providers>
       </body>
     </html>

@@ -85,7 +85,7 @@ export default function ConversationsPage() {
               </p>
               <button
                 onClick={() => router.push("/assistants")}
-                className="mt-4 inline-flex items-center gap-2 px-3 py-1.5 bg-ink text-paper rounded-md text-xs hover:bg-signal transition-colors"
+                className="mt-4 inline-flex items-center gap-2 px-3 py-1.5 bg-ink text-paper rounded-md text-xs hover:bg-accent transition-colors"
               >
                 <PlayCircle className="size-3.5" /> Go to Assistants
               </button>

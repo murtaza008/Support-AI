@@ -73,7 +73,7 @@ export function AuthForm({
     <div className="min-h-screen bg-paper grid md:grid-cols-2">
       <div className="hidden md:flex flex-col justify-between p-10 bg-ink text-paper relative overflow-hidden">
         <Link href="/" className="flex items-center gap-2 relative z-10">
-          <div className="size-7 rounded-md bg-signal flex items-center justify-center text-white text-sm">
+          <div className="size-7 rounded-md bg-accent flex items-center justify-center text-white text-sm">
             ✦
           </div>
           <span className="font-display text-lg font-semibold">SupportAI</span>
@@ -95,7 +95,7 @@ export function AuthForm({
             Priya Shah — Northwind
           </div>
         </motion.div>
-        <div className="font-mono text-[11px] text-paper/40 relative z-10">
+        <div className="font-mono text-[11px] text-paper/70 relative z-10">
           © 2026 SupportAI Labs
         </div>
       </div>
@@ -171,7 +171,7 @@ export function AuthForm({
             <button
               type="submit"
               disabled={loading}
-              className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 bg-signal text-white rounded-md font-medium hover:bg-[#e84a26] hover:-translate-y-0.5 hover:shadow-[0_8px_24px_-8px_rgba(255,90,54,0.5)] transition-all duration-150 disabled:opacity-60 disabled:hover:translate-y-0"
+              className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 bg-accent text-white rounded-md font-medium hover:bg-[#e84a26] hover:-translate-y-0.5 hover:shadow-[0_8px_24px_-8px_rgba(255,90,54,0.5)] transition-all duration-150 disabled:opacity-60 disabled:hover:translate-y-0"
             >
               {loading ? "One sec…" : isSignup ? "Create workspace →" : "Sign in →"}
             </button>

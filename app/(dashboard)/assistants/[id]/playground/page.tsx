@@ -130,9 +130,9 @@ export default function PlaygroundPage() {
         ))}
         {busy && (
           <div className="flex items-center gap-2 text-muted-foreground text-sm">
-            <span className="size-1.5 rounded-full bg-signal animate-pulse" />
-            <span className="size-1.5 rounded-full bg-signal animate-pulse [animation-delay:150ms]" />
-            <span className="size-1.5 rounded-full bg-signal animate-pulse [animation-delay:300ms]" />
+            <span className="size-1.5 rounded-full bg-accent animate-pulse" />
+            <span className="size-1.5 rounded-full bg-accent animate-pulse [animation-delay:150ms]" />
+            <span className="size-1.5 rounded-full bg-accent animate-pulse [animation-delay:300ms]" />
           </div>
         )}
         {error && <div className="text-sm text-destructive">{error.message}</div>}
@@ -148,7 +148,7 @@ export default function PlaygroundPage() {
         <button
           type="submit"
           disabled={busy || !input.trim()}
-          className="inline-flex items-center gap-2 px-4 py-3 bg-signal text-white rounded-md font-medium hover:bg-[#e84a26] transition-colors disabled:opacity-60"
+          className="inline-flex items-center gap-2 px-4 py-3 bg-accent text-white rounded-md font-medium hover:bg-[#e84a26] transition-colors disabled:opacity-60"
         >
           <Send className="size-4" />
         </button>

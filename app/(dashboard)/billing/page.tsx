@@ -152,8 +152,8 @@ export default function BillingPage() {
                   onClick={() => checkout.mutate(p.key as "PRO" | "AGENCY")}
                   className={`mt-8 w-full inline-flex items-center justify-center px-4 py-2.5 rounded-md font-medium transition-colors duration-150 disabled:opacity-50 ${
                     p.highlight
-                      ? "bg-signal text-white hover:bg-[#e84a26]"
-                      : "bg-ink text-paper hover:bg-signal"
+                      ? "bg-accent text-white hover:bg-[#e84a26]"
+                      : "bg-ink text-paper hover:bg-accent"
                   }`}
                 >
                   {p.key === "STARTER" ? "Downgrade in portal" : "Upgrade"}

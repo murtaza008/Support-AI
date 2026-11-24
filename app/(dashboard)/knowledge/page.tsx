@@ -83,7 +83,7 @@ export default function KnowledgePage() {
         </div>
         <button
           onClick={() => setOpen(true)}
-          className="inline-flex items-center gap-2 px-4 py-2.5 bg-signal text-white rounded-md font-medium hover:-translate-y-0.5 hover:shadow-[0_8px_24px_-8px_rgba(255,90,54,0.5)] transition-all"
+          className="inline-flex items-center gap-2 px-4 py-2.5 bg-accent text-white rounded-md font-medium hover:-translate-y-0.5 hover:shadow-[0_8px_24px_-8px_rgba(255,90,54,0.5)] transition-all"
         >
           <Plus className="size-4" /> Add source
         </button>
@@ -373,7 +373,7 @@ function AddSourceModal({
               type="file"
               accept=".pdf,.docx,.txt,.md,.markdown"
               required
-              className="mt-1.5 w-full text-sm file:mr-3 file:px-3 file:py-2 file:rounded-md file:border-0 file:bg-ink file:text-paper file:hover:bg-signal file:cursor-pointer"
+              className="mt-1.5 w-full text-sm file:mr-3 file:px-3 file:py-2 file:rounded-md file:border-0 file:bg-ink file:text-paper file:hover:bg-accent file:cursor-pointer"
             />
           </label>
         )}
@@ -395,7 +395,7 @@ function AddSourceModal({
           <button
             type="submit"
             disabled={busy}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-signal text-white rounded-md text-sm font-medium hover:bg-[#e84a26] transition-colors disabled:opacity-60"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-md text-sm font-medium hover:bg-[#e84a26] transition-colors disabled:opacity-60"
           >
             {busy && <Loader2 className="size-3.5 animate-spin" />}
             {busy ? "Indexing…" : "Add & index"}

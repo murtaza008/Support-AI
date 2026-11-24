@@ -114,7 +114,7 @@ export default function OnboardingPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="mt-6 inline-flex items-center gap-2 px-5 py-3 bg-signal text-white rounded-md font-medium hover:-translate-y-0.5 hover:shadow-[0_8px_24px_-8px_rgba(255,90,54,0.5)] transition-all disabled:opacity-60"
+                className="mt-6 inline-flex items-center gap-2 px-5 py-3 bg-accent text-white rounded-md font-medium hover:-translate-y-0.5 hover:shadow-[0_8px_24px_-8px_rgba(255,90,54,0.5)] transition-all disabled:opacity-60"
               >
                 {loading ? "Creating…" : "Continue →"}
               </button>
@@ -169,7 +169,7 @@ export default function OnboardingPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="mt-8 inline-flex items-center gap-2 px-5 py-3 bg-signal text-white rounded-md font-medium hover:-translate-y-0.5 hover:shadow-[0_8px_24px_-8px_rgba(255,90,54,0.5)] transition-all disabled:opacity-60"
+                className="mt-8 inline-flex items-center gap-2 px-5 py-3 bg-accent text-white rounded-md font-medium hover:-translate-y-0.5 hover:shadow-[0_8px_24px_-8px_rgba(255,90,54,0.5)] transition-all disabled:opacity-60"
               >
                 {loading ? "Creating…" : "Enter dashboard →"}
               </button>

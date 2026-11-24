@@ -48,7 +48,7 @@ export default function AssistantsPage() {
         </div>
         <button
           onClick={() => setOpen(true)}
-          className="inline-flex items-center gap-2 px-4 py-2.5 bg-signal text-white rounded-md font-medium hover:-translate-y-0.5 hover:shadow-[0_8px_24px_-8px_rgba(255,90,54,0.5)] transition-all"
+          className="inline-flex items-center gap-2 px-4 py-2.5 bg-accent text-white rounded-md font-medium hover:-translate-y-0.5 hover:shadow-[0_8px_24px_-8px_rgba(255,90,54,0.5)] transition-all"
         >
           <Plus className="size-4" /> New assistant
         </button>
@@ -105,7 +105,7 @@ export default function AssistantsPage() {
                   </a>
                   <Link
                     href={`/assistants/${a.id}/playground`}
-                    className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-ink text-paper hover:bg-signal transition-colors"
+                    className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-ink text-paper hover:bg-accent transition-colors"
                   >
                     <PlayCircle className="size-3" /> Test
                   </Link>
@@ -124,7 +124,7 @@ export default function AssistantsPage() {
             </p>
             <button
               onClick={() => setOpen(true)}
-              className="mt-5 inline-flex items-center gap-2 px-4 py-2 bg-ink text-paper rounded-md text-sm hover:bg-signal transition-colors"
+              className="mt-5 inline-flex items-center gap-2 px-4 py-2 bg-ink text-paper rounded-md text-sm hover:bg-accent transition-colors"
             >
               <Plus className="size-4" /> New assistant
             </button>
@@ -286,7 +286,7 @@ function CreateAssistantModal({
           <button
             type="submit"
             disabled={loading}
-            className="px-4 py-2 bg-signal text-white rounded-md text-sm font-medium hover:bg-[#e84a26] transition-colors disabled:opacity-60"
+            className="px-4 py-2 bg-accent text-white rounded-md text-sm font-medium hover:bg-[#e84a26] transition-colors disabled:opacity-60"
           >
             {loading ? "Creating…" : "Create assistant"}
           </button>
@@ -392,7 +392,7 @@ function EmbedModal({
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 bg-ink text-paper rounded-md text-sm font-medium hover:bg-signal transition-colors"
+            className="px-4 py-2 bg-ink text-paper rounded-md text-sm font-medium hover:bg-accent transition-colors"
           >
             Done
           </button>
