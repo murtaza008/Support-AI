@@ -180,3 +180,39 @@ test.describe("data review", () => {
     });
   }
 });
+
+test.describe("playground review", () => {
+  for (const theme of themes) {
+    test(`playground ${theme}`, async ({ page }) => {
+      test.skip(!want("playground"));
+      await page.setViewportSize({ width: 1440, height: 900 });
+      await page.emulateMedia({ colorScheme: theme });
+      await page.addInitScript((t) => localStorage.setItem("theme", t), theme);
+      const { mockChat } = await import("./helpers");
+      await mockChat(
+        page,
+        "Annual plans can be refunded in full within 30 days of purchase or renewal [1]. Cancel the plan first under Settings > Billing, then email billing from the workspace owner's address [2].",
+      );
+      await page.goto("/assistants/de300000-0000-4000-8000-0000000000a1/playground");
+      await page.getByRole("heading", { level: 1 }).waitFor({ timeout: 60_000 });
+      await page.waitForLoadState("networkidle");
+      await page.waitForTimeout(800);
+      await shot(page, "playground-empty", theme);
+      const box = page.getByRole("textbox", { name: /^message/i });
+      await box.fill("Can I get a refund on my annual plan?");
+      await box.press("Enter");
+      await page.getByText(/refunded in full/).waitFor();
+      await page.waitForTimeout(400);
+      await page.getByRole("button", { name: /^Source 1/ }).hover();
+      await page.waitForTimeout(500);
+      await shot(page, "playground-answer", theme);
+      await page.getByRole("button", { name: /^Source 1/ }).click();
+      await page.waitForTimeout(1500);
+      await shot(page, "playground-reader", theme);
+      await page.keyboard.press("Escape");
+      await page.setViewportSize({ width: 390, height: 844 });
+      await page.waitForTimeout(500);
+      await shot(page, "playground-mobile", theme);
+    });
+  }
+});

@@ -64,7 +64,10 @@ export async function mockChat(page: Page, answer: string) {
         "x-vercel-ai-ui-message-stream": "v1",
         "x-conversation-id": "",
         "x-citations": encodeURIComponent(
-          JSON.stringify([{ documentId: "doc-mock", documentName: "Refund policy", similarity: 0.82 }]),
+          JSON.stringify([
+            { documentId: "doc-mock", documentName: "Refund policy", similarity: 0.82 },
+            { documentId: "doc-mock-2", documentName: "Billing and Plans", similarity: 0.71 },
+          ]),
         ),
       },
       body,
