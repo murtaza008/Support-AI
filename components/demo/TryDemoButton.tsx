@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Sparkles } from "lucide-react";
+import { ArrowRight } from "lucide-react";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 /**
  * Native form POST to /api/demo/login: the server signs the visitor into the
@@ -10,9 +12,11 @@ import { Sparkles } from "lucide-react";
 export function TryDemoButton({
   className = "",
   label = "Try demo",
+  size = "md",
 }: {
   className?: string;
   label?: string;
+  size?: "sm" | "md" | "lg";
 }) {
   const [pending, setPending] = useState(false);
   return (
@@ -20,10 +24,11 @@ export function TryDemoButton({
       <button
         type="submit"
         disabled={pending}
-        className={`group inline-flex items-center justify-center gap-2 px-5 py-3 rounded-md font-medium text-ink hairline bg-paper-raised hover:border-ink/40 hover:-translate-y-0.5 transition-all duration-150 disabled:opacity-60 disabled:hover:translate-y-0 ${className}`}
+        data-press=""
+        className={cn(buttonVariants({ variant: "secondary", size }), "group", className)}
       >
-        <Sparkles className="size-4 text-signal" />
         {pending ? "Opening demo…" : label}
+        <ArrowRight aria-hidden className="transition-transform duration-200 group-hover:translate-x-0.5" />
       </button>
     </form>
   );

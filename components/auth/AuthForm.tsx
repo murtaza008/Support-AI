@@ -3,10 +3,14 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { motion } from "motion/react";
 import { signIn } from "next-auth/react";
+import { Eye, EyeOff } from "lucide-react";
+import { Logo } from "@/components/brand/Logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { TryDemoButton } from "@/components/demo/TryDemoButton";
+import { CitationDemo } from "@/components/landing/demos/CitationDemo";
+import { Button } from "@/components/ui/button";
+import { Field, Input } from "@/components/ui/form";
 
 export function AuthForm({
   mode,
@@ -20,14 +24,12 @@ export function AuthForm({
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [show, setShow] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   function nextDestination() {
-    const pending =
-      typeof window !== "undefined"
-        ? sessionStorage.getItem("pending_invite_token")
-        : null;
+    const pending = typeof window !== "undefined" ? sessionStorage.getItem("pending_invite_token") : null;
     if (pending) {
       sessionStorage.removeItem("pending_invite_token");
       return `/invite/${pending}`;
@@ -51,15 +53,8 @@ export function AuthForm({
           throw new Error(body.error ?? "Could not create your account.");
         }
       }
-
-      const result = await signIn("credentials", {
-        email,
-        password,
-        redirect: false,
-      });
-      if (result?.error) {
-        throw new Error("Incorrect email or password.");
-      }
+      const result = await signIn("credentials", { email, password, redirect: false });
+      if (result?.error) throw new Error("Incorrect email or password.");
       router.push(nextDestination());
       router.refresh();
     } catch (err: unknown) {
@@ -70,179 +65,122 @@ export function AuthForm({
   }
 
   return (
-    <div className="min-h-screen bg-paper grid md:grid-cols-2">
-      <div className="hidden md:flex flex-col justify-between p-10 bg-ink text-paper relative overflow-hidden">
-        <Link href="/" className="flex items-center gap-2 relative z-10">
-          <div className="size-7 rounded-md bg-signal flex items-center justify-center text-white text-sm">
-            ✦
-          </div>
-          <span className="font-display text-lg font-semibold">SupportAI</span>
-        </Link>
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-          className="relative z-10"
-        >
-          <p
-            className="font-display text-3xl leading-tight"
-            style={{ letterSpacing: "-0.01em" }}
-          >
-            &ldquo;We shut down our $400/mo helpdesk the day SupportAI hit 78%
-            resolution.&rdquo;
-          </p>
-          <div className="mt-5 font-mono-caps text-paper/60">
-            Priya Shah — Northwind
-          </div>
-        </motion.div>
-        <div className="font-mono text-[11px] text-paper/40 relative z-10">
-          © 2026 SupportAI Labs
-        </div>
-      </div>
-
-      <div className="relative flex flex-col items-center justify-center p-8">
-        <div className="absolute top-6 right-6">
+    <div className="grid min-h-dvh lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]">
+      <div className="flex flex-col px-5 py-6 sm:px-10">
+        <div className="flex items-center justify-between">
+          <Link href="/" aria-label="SupportAI home" className="rounded-md">
+            <Logo />
+          </Link>
           <ThemeToggle />
         </div>
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-          className="w-full max-w-sm"
-        >
-          <Link href="/" className="md:hidden flex items-center gap-2 mb-10">
-            <div className="size-7 rounded-md bg-ink flex items-center justify-center text-paper text-sm">
-              ✦
-            </div>
-            <span className="font-display text-lg font-semibold text-ink">
-              SupportAI
-            </span>
-          </Link>
-          <div className="font-mono-caps text-signal mb-3">
-            {isSignup ? "Free forever · No card" : "Welcome back"}
-          </div>
-          <h1
-            className="font-display text-4xl font-semibold text-ink leading-tight"
-            style={{ letterSpacing: "-0.02em" }}
-          >
-            {isSignup ? "Create your workspace." : "Sign in to SupportAI."}
+
+        <main id="main" className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center py-12">
+          <h1 className="text-[28px] font-semibold leading-tight text-fg">
+            {isSignup ? "Create your workspace" : "Sign in to SupportAI"}
           </h1>
-          <p className="mt-3 text-muted-foreground">
+          <p className="mt-2 text-[14.5px] text-fg-muted">
             {isSignup
-              ? "Your first assistant in under five minutes."
-              : "Pick up where you left off."}
+              ? "Free to start. Upload a document and test your assistant in a few minutes."
+              : "Welcome back. Pick up where your team left off."}
           </p>
 
-          <form onSubmit={onSubmit} className="mt-8 space-y-4">
-            {isSignup && (
-              <Field
-                label="Your name"
-                value={name}
-                onChange={setName}
-                type="text"
-                placeholder="Ada Lovelace"
-                autoComplete="name"
-              />
-            )}
-            <Field
-              label="Email"
-              value={email}
-              onChange={setEmail}
-              type="email"
-              placeholder="you@company.com"
-              autoComplete="email"
-              required
-            />
-            <Field
-              label="Password"
-              value={password}
-              onChange={setPassword}
-              type="password"
-              placeholder="••••••••"
-              autoComplete={isSignup ? "new-password" : "current-password"}
-              required
-              minLength={8}
-            />
-            {error && (
-              <div className="text-sm text-destructive bg-destructive/10 border border-destructive/30 rounded-md px-3 py-2">
-                {error}
-              </div>
-            )}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 bg-signal text-white rounded-md font-medium hover:bg-[#e84a26] hover:-translate-y-0.5 hover:shadow-[0_8px_24px_-8px_rgba(255,90,54,0.5)] transition-all duration-150 disabled:opacity-60 disabled:hover:translate-y-0"
-            >
-              {loading ? "One sec…" : isSignup ? "Create workspace →" : "Sign in →"}
-            </button>
-          </form>
-
-          {!isSignup && (
-            <div className="mt-6">
-              <div className="flex items-center gap-3 font-mono-caps text-muted-foreground">
-                <span className="h-px flex-1 bg-line" />
-                or
-                <span className="h-px flex-1 bg-line" />
-              </div>
-              <TryDemoButton
-                label="Try the demo, no sign-up"
-                className="mt-6 w-full"
-              />
-              {demoUnavailable && (
-                <p className="mt-3 text-sm text-destructive text-center">
-                  The demo is unavailable right now. Please try again shortly.
-                </p>
-              )}
-            </div>
+          {demoUnavailable && (
+            <p role="alert" className="mt-5 rounded-md border border-warning/40 bg-warning-soft px-3 py-2 text-[13px] text-warning-text">
+              The live demo isn&rsquo;t available right now. You can still create a free account.
+            </p>
           )}
 
-          <p className="mt-8 text-sm text-muted-foreground text-center">
+          <form onSubmit={onSubmit} className="mt-7 space-y-4" noValidate={false}>
+            {isSignup && (
+              <Field label="Your name" htmlFor="auth-name">
+                <Input
+                  id="auth-name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  autoComplete="name"
+                  placeholder="Ada Lovelace"
+                />
+              </Field>
+            )}
+            <Field label="Work email" htmlFor="auth-email">
+              <Input
+                id="auth-email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
+                placeholder="you@company.com"
+                required
+              />
+            </Field>
+            <Field label="Password" htmlFor="auth-password" hint={isSignup ? "At least 8 characters." : undefined}>
+              <div className="relative">
+                <Input
+                  id="auth-password"
+                  type={show ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete={isSignup ? "new-password" : "current-password"}
+                  required
+                  minLength={8}
+                  aria-describedby={isSignup ? "auth-password-hint" : undefined}
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShow((s) => !s)}
+                  aria-label={show ? "Hide password" : "Show password"}
+                  aria-pressed={show}
+                  className="absolute right-1 top-1/2 flex size-7 -translate-y-1/2 items-center justify-center rounded text-fg-subtle hover:text-fg"
+                >
+                  {show ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                </button>
+              </div>
+            </Field>
+
+            {error && (
+              <p role="alert" className="rounded-md border border-danger-text/30 bg-danger-soft px-3 py-2 text-[13px] text-danger-text">
+                {error}
+              </p>
+            )}
+
+            <Button type="submit" variant="primary" size="lg" className="w-full" disabled={loading}>
+              {loading ? (isSignup ? "Creating your account…" : "Signing in…") : isSignup ? "Create account" : "Sign in"}
+            </Button>
+          </form>
+
+          <div className="my-6 flex items-center gap-3 text-[12px] text-fg-muted">
+            <span className="h-px flex-1 bg-border" />
+            or
+            <span className="h-px flex-1 bg-border" />
+          </div>
+          <TryDemoButton label="Open the live demo, no sign-up" className="w-full" />
+
+          <p className="mt-8 text-center text-[13.5px] text-fg-muted">
             {isSignup ? "Already have an account? " : "New to SupportAI? "}
-            <Link
-              href={isSignup ? "/login" : "/signup"}
-              className="text-signal font-medium hover:underline"
-            >
-              {isSignup ? "Sign in" : "Get started free"}
+            <Link href={isSignup ? "/login" : "/signup"} className="font-medium text-accent-text underline-offset-4 hover:underline">
+              {isSignup ? "Sign in" : "Create a workspace"}
             </Link>
           </p>
-        </motion.div>
+        </main>
       </div>
-    </div>
-  );
-}
 
-function Field({
-  label,
-  value,
-  onChange,
-  type,
-  placeholder,
-  autoComplete,
-  required,
-  minLength,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  type: string;
-  placeholder?: string;
-  autoComplete?: string;
-  required?: boolean;
-  minLength?: number;
-}) {
-  return (
-    <label className="block">
-      <span className="font-mono-caps text-muted-foreground">{label}</span>
-      <input
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        autoComplete={autoComplete}
-        required={required}
-        minLength={minLength}
-        className="mt-1.5 w-full px-3 py-2.5 bg-paper-raised hairline rounded-md text-ink placeholder:text-muted-foreground focus:border-signal focus:outline-none transition-colors"
-      />
-    </label>
+      <aside
+        aria-label="What answers look like"
+        className="relative hidden border-l border-border bg-surface-2 lg:flex lg:flex-col lg:justify-center lg:px-14"
+      >
+        <div aria-hidden className="grid-backdrop pointer-events-none absolute inset-0" />
+        <div className="relative mx-auto w-full max-w-md">
+          <p className="eyebrow">What your customers see</p>
+          <p className="mt-2 text-[22px] font-semibold leading-snug text-fg">
+            Answers that point at the exact passage they came from.
+          </p>
+          <div className="panel mt-8 h-[400px] p-5">
+            <CitationDemo />
+          </div>
+          <p className="mt-4 text-[13px] text-fg-muted">Point at a number to see its source.</p>
+        </div>
+      </aside>
+    </div>
   );
 }

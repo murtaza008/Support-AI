@@ -1,51 +1,56 @@
+import Link from "next/link";
+import { Logo } from "@/components/brand/Logo";
+import { ThemeToggle } from "@/components/theme-toggle";
+
+const columns = [
+  {
+    title: "Product",
+    links: [
+      { href: "/#how-it-works", label: "How it works" },
+      { href: "/#features", label: "Features" },
+      { href: "/#pricing", label: "Pricing" },
+      { href: "/#faq", label: "FAQ" },
+    ],
+  },
+  {
+    title: "Account",
+    links: [
+      { href: "/signup", label: "Create a workspace" },
+      { href: "/login", label: "Sign in" },
+    ],
+  },
+];
+
 export function Footer() {
   return (
-    <footer className="border-t border-line bg-paper">
-      <div className="max-w-6xl mx-auto px-6 py-12 grid grid-cols-2 md:grid-cols-4 gap-8">
-        <div className="col-span-2">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="size-7 rounded-md bg-ink flex items-center justify-center text-paper text-sm">
-              ✦
-            </div>
-            <span className="font-display text-lg font-semibold text-ink">SupportAI</span>
-          </div>
-          <p className="text-sm text-muted-foreground max-w-sm">
-            The AI support agent that actually reads your docs.
+    <footer className="border-t border-border">
+      <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:px-6 md:grid-cols-[1.4fr_1fr_1fr]">
+        <div>
+          <Logo />
+          <p className="mt-3 max-w-xs text-[13.5px] text-fg-muted">
+            A support assistant that answers from your help docs and shows where each answer came from.
           </p>
+          <ThemeToggle className="mt-5" />
         </div>
-        <div>
-          <h4 className="font-mono-caps text-ink mb-3">Product</h4>
-          <ul className="space-y-2 text-sm text-muted-foreground">
-            <li>
-              <a href="#features" className="hover:text-ink">
-                Features
-              </a>
-            </li>
-            <li>
-              <a href="#pricing" className="hover:text-ink">
-                Pricing
-              </a>
-            </li>
-            <li>
-              <a href="#faq" className="hover:text-ink">
-                FAQ
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div>
-          <h4 className="font-mono-caps text-ink mb-3">Company</h4>
-          <ul className="space-y-2 text-sm text-muted-foreground">
-            <li>Contact</li>
-            <li>Privacy</li>
-            <li>Terms</li>
-          </ul>
-        </div>
+        {columns.map((c) => (
+          <div key={c.title}>
+            <h2 className="eyebrow">{c.title}</h2>
+            <ul className="mt-3 space-y-2">
+              {c.links.map((l) => (
+                <li key={l.href}>
+                  <Link href={l.href} className="text-[13.5px] text-fg-muted transition-colors hover:text-fg">
+                    {l.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
       </div>
-      <div className="border-t border-line">
-        <div className="max-w-6xl mx-auto px-6 py-5 flex items-center justify-between text-xs text-muted-foreground">
-          <span className="font-mono">© 2026 SupportAI Labs</span>
-          <span className="font-mono-caps">Made for support teams who care</span>
+      <div className="border-t border-border">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-4 py-4 text-[12.5px] text-fg-muted sm:px-6">
+          <span>© 2026 SupportAI · MIT licensed</span>
+          <span>Built with Next.js, Postgres + pgvector and Gemini</span>
         </div>
       </div>
     </footer>
