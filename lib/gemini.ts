@@ -15,27 +15,47 @@ export function isOverloaded(error: unknown): boolean {
 
 type FallbackModel = Pick<ReturnType<typeof google>, "doGenerate" | "doStream">;
 
-/** Sends the call to `fallback` when the wrapped model reports it is overloaded. */
-export function fallbackMiddleware(fallback: FallbackModel): LanguageModelMiddleware {
+/** Google sometimes takes a minute or two just to answer "busy", so the main
+ * model gets this long to start responding before the fallback takes over. */
+export const PRIMARY_TIMEOUT_MS = 10_000;
+
+type CallOptions = Parameters<FallbackModel["doStream"]>[0];
+
+/**
+ * Runs `call` on the main model with a time limit, and sends the same call to
+ * `fallback` when the main model is overloaded or too slow to start.
+ * A cancel from the user (params.abortSignal) is never treated as overload.
+ */
+async function withFallback<T>(
+  params: CallOptions,
+  primary: (params: CallOptions) => PromiseLike<T>,
+  fallback: (params: CallOptions) => PromiseLike<T>,
+  timeoutMs: number,
+): Promise<T> {
+  const timeout = new AbortController();
+  const signal = params.abortSignal ? AbortSignal.any([params.abortSignal, timeout.signal]) : timeout.signal;
+  const timer = setTimeout(() => timeout.abort(new Error("primary model timed out")), timeoutMs);
+  try {
+    return await primary({ ...params, abortSignal: signal });
+  } catch (error) {
+    if (params.abortSignal?.aborted) throw error;
+    if (!timeout.signal.aborted && !isOverloaded(error)) throw error;
+    console.warn(
+      `[gemini] ${PRIMARY_CHAT_MODEL} ${timeout.signal.aborted ? "too slow" : "unavailable"}, using ${FALLBACK_CHAT_MODEL}`,
+    );
+    return fallback(params);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/** Sends the call to `fallback` when the wrapped model is overloaded or too slow to start. */
+export function fallbackMiddleware(fallback: FallbackModel, timeoutMs = PRIMARY_TIMEOUT_MS): LanguageModelMiddleware {
   return {
-    wrapGenerate: async ({ doGenerate, params }) => {
-      try {
-        return await doGenerate();
-      } catch (error) {
-        if (!isOverloaded(error)) throw error;
-        console.warn(`[gemini] ${PRIMARY_CHAT_MODEL} unavailable, using ${FALLBACK_CHAT_MODEL}`);
-        return fallback.doGenerate(params);
-      }
-    },
-    wrapStream: async ({ doStream, params }) => {
-      try {
-        return await doStream();
-      } catch (error) {
-        if (!isOverloaded(error)) throw error;
-        console.warn(`[gemini] ${PRIMARY_CHAT_MODEL} unavailable, using ${FALLBACK_CHAT_MODEL}`);
-        return fallback.doStream(params);
-      }
-    },
+    wrapGenerate: ({ model, params }) =>
+      withFallback(params, (p) => model.doGenerate(p), (p) => fallback.doGenerate(p), timeoutMs),
+    wrapStream: ({ model, params }) =>
+      withFallback(params, (p) => model.doStream(p), (p) => fallback.doStream(p), timeoutMs),
   };
 }
 
